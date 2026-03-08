@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>✨ Happy Women's Day 2026 ✨</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@400;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a1a; font-family: 'Quicksand', sans-serif; }
+        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
+
+        /* ===== Floating Hearts Background (CSS) ===== */
+        .bg-hearts { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
+        .bg-hearts span {
+            position: absolute; bottom: -40px; font-size: 20px; animation: floatUp linear infinite; opacity: 0.3;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(-110vh) rotate(720deg) scale(0.3); opacity: 0; }
+        }
+
+        /* ===== Overlay (Intro Screen) ===== */
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1a0a2e 0%, #0d1b2a 50%, #1a0a2e 100%);
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        #overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .intro-card {
+            background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
+            padding: 40px 48px; max-width: 680px; width: 90%; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .intro-card h1 {
+            font-family: 'Dancing Script', cursive; font-size: 2.8em; color: #ff69b4;
+            text-shadow: 0 0 30px rgba(255,105,180,0.5), 0 0 60px rgba(255,105,180,0.2);
+            margin-bottom: 8px;
+        }
+        .intro-card .subtitle { color: rgba(255,255,255,0.6); font-size: 0.95em; margin-bottom: 28px; }
+
+        .upload-area { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+        .upload-box {
+            width: 180px; height: 180px; border: 2px dashed rgba(255,105,180,0.4);
+            border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+            background: rgba(255,105,180,0.03);
+        }
+        .upload-box:hover { border-color: #ff69b4; background: rgba(255,105,180,0.08); transform: translateY(-2px); }
+        .upload-box .icon { font-size: 2.2em; margin-bottom: 6px; }
+        .upload-box p { color: rgba(255,255,255,0.7); font-size: 0.8em; padding: 0 8px; }
+        .upload-box input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .upload-box img {
+            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+            border-radius: 14px; display: none;
+        }
+
+        .name-field { margin-bottom: 24px; }
+        .name-field label { color: rgba(255,255,255,0.6); font-size: 0.85em; display: block; margin-bottom: 6px; }
+        .name-field input {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px; padding: 10px 16px; color: #fff; font-size: 1em;
+            width: 280px; max-width: 100%; outline: none; transition: border 0.3s;
+            font-family: 'Quicksand', sans-serif;
+        }
+        .name-field input:focus { border-color: #ff69b4; }
+        .name-field input::placeholder { color: rgba(255,255,255,0.3); }
+
+        .btn-group { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            padding: 12px 32px; border: none; border-radius: 12px; font-size: 1em; cursor: pointer;
+            font-family: 'Quicksand', sans-serif; font-weight: 600; transition: all 0.3s;
+        }
+        .btn.primary {
+            background: linear-gradient(135deg, #ff69b4, #e040fb); color: #fff;
+            box-shadow: 0 4px 20px rgba(255,105,180,0.4);
+        }
+        .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(255,105,180,0.6); }
+        .btn.secondary {
+            background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .btn.secondary:hover { background: rgba(255,255,255,0.12); }
+
+        /* ===== Phase Message ===== */
+        #phaseMsg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
+        }
+        #phaseMsg .text {
+            font-family: 'Dancing Script', cursive; font-size: 2.4em; color: #fff;
+            text-shadow: 0 0 30px rgba(255,105,180,0.6); opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        #phaseMsg .text.show { opacity: 1; }
+
+        /* ===== Final Panel ===== */
+        #finalPanel {
+            position: fixed; bottom: 0; left: 0; width: 100%; z-index: 60;
+            display: flex; justify-content: center; padding: 24px;
+            transform: translateY(100%); transition: transform 0.8s cubic-bezier(0.16,1,0.3,1);
+        }
+        #finalPanel.show { transform: translateY(0); }
+        .final-card {
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
+            padding: 28px 40px; text-align: center; max-width: 560px; width: 90%;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+        }
+        .final-card h2 { font-family: 'Dancing Script', cursive; color: #ff69b4; font-size: 2em; margin-bottom: 10px; }
+        .final-card p { color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 6px; }
+        .final-card .name-highlight { color: #ffd700; font-weight: 600; font-size: 1.15em; }
+        .final-card .btn { margin-top: 16px; }
+
+        /* ===== Screen Flash ===== */
+        #flash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 40;
+            background: #fff; opacity: 0; pointer-events: none; transition: opacity 0.1s;
+        }
+
+        /* ===== Scanlines (Matrix vibe) ===== */
+        #scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, transparent 1px, transparent 3px);
+            pointer-events: none; opacity: 0; transition: opacity 0.5s;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 600px) {
+            .intro-card { padding: 28px 20px; }
+            .intro-card h1 { font-size: 2em; }
+            .upload-box { width: 140px; height: 140px; }
+            .final-card { padding: 20px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Floating hearts background -->
+<div class="bg-hearts" id="bgHearts"></div>
+
+<!-- Screen flash effect -->
+<div id="flash"></div>
+
+<!-- Scanlines overlay -->
+<div id="scanlines"></div>
+
+<!-- Main canvas -->
+<canvas id="canvas"></canvas>
+
+<!-- Phase message overlay -->
+<div id="phaseMsg"><div class="text" id="phaseMsgText"></div></div>
+
+<!-- Intro overlay -->
+<div id="overlay">
+    <div class="intro-card">
+        <h1>✨ Happy Women's Day ✨</h1>
+        <p class="subtitle">Trải nghiệm tương tác dành tặng những người phụ nữ tuyệt vời</p>
+
+        <div class="upload-area">
+            <div class="upload-box" id="box1">
+                <span class="icon">🖼️</span>
+                <p>Ảnh 1 — Chân dung</p>
+                <input type="file" accept="image/*" id="file1">
+                <img id="preview1" alt="">
+            </div>
+            <div class="upload-box" id="box2">
+                <span class="icon">🖼️</span>
+                <p>Ảnh 2 — Chân dung</p>
+                <input type="file" accept="image/*" id="file2">
+                <img id="preview2" alt="">
+            </div>
+        </div>
+
+        <div class="name-field">
+            <label>Tên người nhận 💝</label>
+            <input type="text" id="nameInput" placeholder="VD: Hà Anh">
+        </div>
+
+        <div class="btn-group">
+            <button class="btn primary" id="startBtn">✨ Bắt đầu trải nghiệm</button>
+            <button class="btn secondary" id="demoBtn">▶ Xem Demo</button>
+        </div>
+    </div>
+</div>
+
+<!-- Final panel -->
+<div id="finalPanel">
+    <div class="final-card">
+        <h2>🌸 Happy Women's Day 🌸</h2>
+        <p id="finalLine1"></p>
+        <p id="finalLine2"></p>
+        <p id="finalLine3"></p>
+        <div style="margin-top:14px">
+            <button class="btn secondary" onclick="location.reload()">🔄 Xem lại</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIGURATION
+// ═══════════════════════════════════════════════════════════════
+const CFG = {
+    PARTICLE_COUNT: 8000,
+    SPRING: 0.045,
+    DAMPING: 0.88,
+    MOUSE_RADIUS: 120,
+    MOUSE_FORCE: 12,
+    COLOR_LERP: 0.045,
+    MOSAIC_SCALE: 4,
+    FONT_SIZE: 11,
+    CHAR_W: 6.6,
+    LINE_H: 13,
+    ZOOM_START: null, // calculated later
+    ZOOM_END: 2.2,
+};
+
+const WORDS = [
+    "Xinh đẹp ", "Giỏi giang ", "Tuyệt vời ", "Dịu dàng ", "Mạnh mẽ ",
+    "Thông minh ", "Tài năng ", "Kiên cường ", "Rạng rỡ ", "Tỏa sáng ",
+    "Yêu thương ", "Happy 8/3 ", "Women's Day ", "Hạnh phúc ",
+    "♡ ", "✿ ", "★ ", "Tuyệt vời ", "Amazing ",
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let canvas, ctx, W, H;
+let image1 = null, image2 = null;
+let recipientName = '';
+let particles = [];
+let confetti = [];
+let petals = [];
+let mosaicCanvas = null;
+let phase = 'IDLE';
+let phaseTime = 0;
+let phaseStartTime = 0;
+let mouseX = -9999, mouseY = -9999, mouseActive = false;
+let img1Points = [], img2Points = [];
+let heartPts = [], starPts = [], flowerPts = [];
+let shockwaves = [];
+
+// Zoom state for mosaic
+let zoomLevel = 0.4;
+let zoomCx = 0, zoomCy = 0;
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════════
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function rand(a, b) { return a + Math.random() * (b - a); }
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
+function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+function easeOutBack(t) { const c = 1.70158; return 1 + (c+1) * Math.pow(t-1,3) + c * Math.pow(t-1,2); }
+
+function loadImage(src) {
+    return new Promise((res, rej) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => res(img);
+        img.onerror = rej;
+        img.src = src;
+    });
+}
+
+function fileToImage(file) {
+    return new Promise((res) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => res(img);
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DEFAULT IMAGES (canvas-drawn)
+// ═══════════════════════════════════════════════════════════════
+function createDefaultImage1() {
+    const S = 800;
+    const c = document.createElement('canvas');
+    c.width = S; c.height = S;
+    const g = c.getContext('2d');
+    const r = S / 500; // ratio for scaling all positions
+
+    // Background gradient
+    const bg = g.createRadialGradient(S/2, S/2, 0, S/2, S/2, S*0.7);
+    bg.addColorStop(0, '#2d1b4e');
+    bg.addColorStop(1, '#0a0a1a');
+    g.fillStyle = bg;
+    g.fillRect(0, 0, S, S);
+
+    // Decorative circles
+    for (let i = 0; i < 35; i++) {
+        g.beginPath();
+        g.arc(rand(50*r, S-50*r), rand(50*r, S-50*r), rand(8,40)*r, 0, Math.PI*2);
+        g.fillStyle = `hsla(${rand(300,360)}, 80%, 60%, ${rand(0.05,0.2)})`;
+        g.fill();
+    }
+
+    // "8" 
+    g.fillStyle = '#ff69b4';
+    g.font = `bold ${Math.round(220*r)}px Georgia, serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.shadowColor = '#ff69b4';
+    g.shadowBlur = 60;
+    g.fillText('8', 170*r, 260*r);
+
+    // "/" 
+    g.fillStyle = '#ffd700';
+    g.font = `bold ${Math.round(160*r)}px Georgia, serif`;
+    g.shadowColor = '#ffd700';
+    g.shadowBlur = 40;
+    g.fillText('/', 280*r, 250*r);
+
+    // "3"
+    g.fillStyle = '#e040fb';
+    g.font = `bold ${Math.round(220*r)}px Georgia, serif`;
+    g.shadowColor = '#e040fb';
+    g.shadowBlur = 60;
+    g.fillText('3', 380*r, 260*r);
+    g.shadowBlur = 0;
+
+    // Small hearts
+    g.font = `${Math.round(36*r)}px serif`;
+    const hearts = ['💝','🌸','✨','💗','🌺','⭐','💖'];
+    for (let i = 0; i < 24; i++) {
+        g.fillText(hearts[i%hearts.length], rand(20*r, S-30*r), rand(20*r, S-20*r));
+    }
+
+    return c;
+}
+
+function createDefaultImage2() {
+    const S = 800;
+    const c = document.createElement('canvas');
+    c.width = S; c.height = S;
+    const g = c.getContext('2d');
+    const ratio = S / 500;
+
+    g.fillStyle = '#0a0a1a';
+    g.fillRect(0, 0, S, S);
+
+    // Big heart
+    const cx = S/2, cy = 230*ratio, sc = 13*ratio;
+    const grad = g.createRadialGradient(cx, cy, 0, cx, cy+40, sc*18);
+    grad.addColorStop(0, '#ff1493');
+    grad.addColorStop(0.5, '#e91e63');
+    grad.addColorStop(1, '#9c27b0');
+    g.fillStyle = grad;
+    g.shadowColor = '#ff1493';
+    g.shadowBlur = 60;
+    g.beginPath();
+    for (let t = 0; t <= Math.PI*2; t += 0.01) {
+        const hx = 16 * Math.pow(Math.sin(t), 3);
+        const hy = -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t));
+        if (t === 0) g.moveTo(cx + hx*sc, cy + hy*sc);
+        else g.lineTo(cx + hx*sc, cy + hy*sc);
+    }
+    g.closePath();
+    g.fill();
+    g.shadowBlur = 0;
+
+    // Text inside heart
+    g.fillStyle = '#fff';
+    g.font = `bold ${Math.round(36*ratio)}px Quicksand, sans-serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('Happy', cx, cy - 20*ratio);
+    g.font = `bold ${Math.round(54*ratio)}px Georgia, serif`;
+    g.fillText('8/3', cx, cy + 30*ratio);
+
+    // Small sparkles
+    g.font = `${Math.round(26*ratio)}px serif`;
+    for (let i = 0; i < 28; i++) {
+        const a = rand(0, Math.PI*2);
+        const r = rand(sc*16/ratio, sc*20/ratio);
+        g.fillText(['✨','💫','⭐','🌟'][i%4], cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+    }
+
+    return c;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  IMAGE PROCESSING — sample pixels from an image/canvas
+// ═══════════════════════════════════════════════════════════════
+function sampleImage(imgSource, targetCount, dispW, dispH) {
+    const tmp = document.createElement('canvas');
+    const maxDim = 400;
+    let sw, sh;
+    if (imgSource.width >= imgSource.height) {
+        sw = maxDim;
+        sh = Math.floor(maxDim * imgSource.height / imgSource.width);
+    } else {
+        sh = maxDim;
+        sw = Math.floor(maxDim * imgSource.width / imgSource.height);
+    }
+    tmp.width = sw; tmp.height = sh;
+    const tCtx = tmp.getContext('2d');
+    tCtx.drawImage(imgSource, 0, 0, sw, sh);
+    const data = tCtx.getImageData(0, 0, sw, sh).data;
+
+    // Fit to display canvas
+    const scale = Math.min(dispW / sw, dispH / sh) * 0.82;
+    const offX = (dispW - sw * scale) / 2;
+    const offY = (dispH - sh * scale) / 2;
+
+    const step = Math.max(1, Math.floor(Math.sqrt(sw * sh / (targetCount * 1.4))));
+    let pts = [];
+    for (let y = 0; y < sh; y += step) {
+        for (let x = 0; x < sw; x += step) {
+            const i = (y * sw + x) * 4;
+            const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+            if (a < 30) continue;
+            pts.push({ x: offX + x*scale, y: offY + y*scale, r, g, b });
+        }
+    }
+
+    shuffle(pts);
+    if (pts.length > targetCount) pts = pts.slice(0, targetCount);
+    while (pts.length < targetCount) {
+        const s = pts[Math.floor(Math.random()*pts.length)];
+        pts.push({ x: s.x+rand(-3,3), y: s.y+rand(-3,3), r: s.r, g: s.g, b: s.b });
+    }
+    return pts;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SHAPE GENERATORS (heart / star / flower)
+// ═══════════════════════════════════════════════════════════════
+function generateShapePoints(shapeName, count, cw, ch) {
+    const tmp = document.createElement('canvas');
+    const sz = 360;
+    tmp.width = sz; tmp.height = sz;
+    const g = tmp.getContext('2d');
+
+    if (shapeName === 'heart') {
+        g.fillStyle = '#f00';
+        g.beginPath();
+        const cx2 = sz/2, cy2 = sz/2.15, s = sz/35;
+        for (let t = 0; t <= Math.PI*2; t += 0.02) {
+            const hx = 16*Math.pow(Math.sin(t),3);
+            const hy = -(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
+            if (t === 0) g.moveTo(cx2+hx*s, cy2+hy*s); else g.lineTo(cx2+hx*s, cy2+hy*s);
+        }
+        g.closePath(); g.fill();
+    } else if (shapeName === 'star') {
+        g.fillStyle = '#ff0';
+        g.beginPath();
+        const cx2=sz/2, cy2=sz/2, oR=sz*0.45, iR=sz*0.18;
+        for (let i = 0; i < 10; i++) {
+            const r = i%2===0 ? oR : iR;
+            const a = (i*Math.PI/5) - Math.PI/2;
+            if (i===0) g.moveTo(cx2+Math.cos(a)*r, cy2+Math.sin(a)*r);
+            else g.lineTo(cx2+Math.cos(a)*r, cy2+Math.sin(a)*r);
+        }
+        g.closePath(); g.fill();
+    } else { // flower
+        const cx2=sz/2, cy2=sz/2, pR=sz*0.2;
+        for (let i = 0; i < 6; i++) {
+            const a = (i/6)*Math.PI*2;
+            g.fillStyle = `hsl(${320+i*12},80%,65%)`;
+            g.beginPath();
+            g.ellipse(cx2+Math.cos(a)*pR*0.7, cy2+Math.sin(a)*pR*0.7, pR, pR*0.55, a, 0, Math.PI*2);
+            g.fill();
+        }
+        g.fillStyle = '#ffe066';
+        g.beginPath(); g.arc(cx2,cy2,pR*0.35,0,Math.PI*2); g.fill();
+    }
+
+    const data = g.getImageData(0,0,sz,sz).data;
+    const filled = [];
+    for (let y = 0; y < sz; y++) {
+        for (let x = 0; x < sz; x++) {
+            if (data[(y*sz+x)*4+3] > 128) filled.push({x, y});
+        }
+    }
+    shuffle(filled);
+
+    const dispScale = Math.min(cw, ch) * 0.65 / sz;
+    const offX = (cw - sz*dispScale) / 2;
+    const offY = (ch - sz*dispScale) / 2;
+
+    const pts = [];
+    for (let i = 0; i < count; i++) {
+        const p = filled[i % filled.length];
+        const jx = (i >= filled.length) ? rand(-2,2) : 0;
+        const jy = (i >= filled.length) ? rand(-2,2) : 0;
+        const px = offX + (p.x + jx) * dispScale;
+        const py = offY + (p.y + jy) * dispScale;
+
+        let r, g2, b;
+        if (shapeName === 'heart') { r=200+rand(0,55); g2=20+rand(0,80); b=60+rand(0,80); }
+        else if (shapeName === 'star') { r=255; g2=180+rand(0,75); b=rand(0,60); }
+        else { r=200+rand(0,55); g2=80+rand(0,120); b=170+rand(0,85); }
+        pts.push({ x: px, y: py, r, g: g2, b });
+    }
+    return pts;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TEXT MOSAIC GENERATION (high-res offscreen canvas)
+// ═══════════════════════════════════════════════════════════════
+function buildMosaic(imgSource) {
+    const mW = Math.floor(W * DPR * CFG.MOSAIC_SCALE);
+    const mH = Math.floor(H * DPR * CFG.MOSAIC_SCALE);
+    mosaicCanvas = document.createElement('canvas');
+    mosaicCanvas.width = mW;
+    mosaicCanvas.height = mH;
+    const mCtx = mosaicCanvas.getContext('2d');
+
+    // Fill dark background
+    mCtx.fillStyle = '#0a0a1a';
+    mCtx.fillRect(0, 0, mW, mH);
+
+    // Scale font for DPR
+    const fontSize = CFG.FONT_SIZE * DPR;
+    const charW = CFG.CHAR_W * DPR;
+    const lineH = CFG.LINE_H * DPR;
+
+    // Sample image at mosaic resolution for color data
+    const cols = Math.floor(mW / charW);
+    const rows = Math.floor(mH / lineH);
+    const colorCanvas = document.createElement('canvas');
+    colorCanvas.width = cols;
+    colorCanvas.height = rows;
+    const cCtx = colorCanvas.getContext('2d');
+    cCtx.drawImage(imgSource, 0, 0, cols, rows);
+    const cData = cCtx.getImageData(0, 0, cols, rows).data;
+
+    // Render text
+    mCtx.font = `${fontSize}px "Courier New", monospace`;
+    mCtx.textBaseline = 'top';
+
+    // Include recipient name in words
+    let allWords = [...WORDS];
+    if (recipientName.trim()) {
+        allWords.push(recipientName.trim() + ' ');
+        allWords.push(recipientName.trim() + ' ');
+    }
+
+    let wIdx = 0;
+    for (let row = 0; row < rows; row++) {
+        let col = 0;
+        while (col < cols) {
+            const word = allWords[wIdx % allWords.length];
+            wIdx++;
+            for (let i = 0; i < word.length && col + i < cols; i++) {
+                const pi = ((row) * cols + (col + i)) * 4;
+                const r = cData[pi], g = cData[pi+1], b = cData[pi+2];
+                mCtx.fillStyle = `rgb(${r},${g},${b})`;
+                mCtx.fillText(word[i], (col + i) * charW, row * lineH);
+            }
+            col += word.length;
+        }
+    }
+
+    // Set zoom center and initial level
+    zoomCx = mW / 2;
+    zoomCy = mH * 0.45;
+    CFG.ZOOM_START = 1 / (CFG.MOSAIC_SCALE * DPR);
+    zoomLevel = CFG.ZOOM_START;
+}
+
+function drawMosaic() {
+    const viewW = (W * DPR) / zoomLevel;
+    const viewH = (H * DPR) / zoomLevel;
+    const sx = clamp(zoomCx - viewW/2, 0, mosaicCanvas.width - viewW);
+    const sy = clamp(zoomCy - viewH/2, 0, mosaicCanvas.height - viewH);
+    ctx.drawImage(mosaicCanvas, sx, sy, viewW, viewH, 0, 0, W, H);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PARTICLE DRAWING SHAPES
+// ═══════════════════════════════════════════════════════════════
+function drawHeart(cx, cy, s) {
+    const hs = s * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + hs * 0.35);
+    ctx.bezierCurveTo(cx + hs, cy - hs*0.4, cx + hs*0.55, cy - hs, cx, cy - hs*0.35);
+    ctx.bezierCurveTo(cx - hs*0.55, cy - hs, cx - hs, cy - hs*0.4, cx, cy + hs*0.35);
+    ctx.fill();
+}
+function drawStar(cx, cy, s) {
+    const oR = s*0.5, iR = s*0.2;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+        const r = i%2===0 ? oR : iR;
+        const a = (i*Math.PI/5) - Math.PI/2;
+        if (i===0) ctx.moveTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+        else ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+    }
+    ctx.closePath(); ctx.fill();
+}
+function drawFlower(cx, cy, s) {
+    const pR = s * 0.35;
+    for (let i = 0; i < 5; i++) {
+        const a = (i/5)*Math.PI*2 - Math.PI/2;
+        ctx.beginPath();
+        ctx.ellipse(cx+Math.cos(a)*pR*0.55, cy+Math.sin(a)*pR*0.55, pR*0.5, pR*0.3, a, 0, Math.PI*2);
+        ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(cx, cy, pR*0.22, 0, Math.PI*2); ctx.fill();
+}
+
+function drawParticle(p) {
+    ctx.fillStyle = `rgba(${Math.round(p.r)},${Math.round(p.g)},${Math.round(p.b)},${p.alpha.toFixed(2)})`;
+    if (p.size <= 3 || p.shape === 0) {
+        const sz = Math.max(1.2, p.size);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, sz * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (p.shape === 1) {
+        drawHeart(p.x, p.y, p.size);
+    } else if (p.shape === 2) {
+        drawStar(p.x, p.y, p.size);
+    } else {
+        drawFlower(p.x, p.y, p.size);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CONFETTI & PETALS
+// ═══════════════════════════════════════════════════════════════
+function spawnConfetti(cx, cy, count) {
+    for (let i = 0; i < count; i++) {
+        const angle = rand(0, Math.PI*2);
+        const speed = rand(4, 14);
+        confetti.push({
+            x: cx, y: cy,
+            vx: Math.cos(angle)*speed,
+            vy: Math.sin(angle)*speed - rand(2,6),
+            r: rand(0,255), g: rand(0,255), b: rand(0,255),
+            size: rand(3, 7),
+            life: 1,
+            decay: rand(0.008, 0.02),
+            rotation: rand(0, Math.PI*2),
+            rotSpeed: rand(-0.2, 0.2),
+        });
+    }
+}
+
+function updateConfetti() {
+    for (let i = confetti.length - 1; i >= 0; i--) {
+        const c = confetti[i];
+        c.vy += 0.15;
+        c.vx *= 0.99;
+        c.x += c.vx;
+        c.y += c.vy;
+        c.life -= c.decay;
+        c.rotation += c.rotSpeed;
+        if (c.life <= 0) confetti.splice(i, 1);
+    }
+}
+
+function drawConfetti() {
+    confetti.forEach(c => {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rotation);
+        ctx.fillStyle = `rgba(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)},${c.life.toFixed(2)})`;
+        ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size * 0.6);
+        ctx.restore();
+    });
+}
+
+function initPetals() {
+    for (let i = 0; i < 15; i++) {
+        petals.push({
+            x: rand(0, W), y: rand(-H, H),
+            vx: rand(-0.3, 0.3), vy: rand(0.3, 1.2),
+            size: rand(6, 14), rot: rand(0, Math.PI*2),
+            rotV: rand(-0.02, 0.02), alpha: rand(0.15, 0.35),
+            hue: rand(320, 360),
+        });
+    }
+}
+
+function updatePetals() {
+    petals.forEach(p => {
+        p.x += p.vx + Math.sin(p.y * 0.005) * 0.3;
+        p.y += p.vy;
+        p.rot += p.rotV;
+        if (p.y > H + 20) { p.y = -20; p.x = rand(0, W); }
+        if (p.x > W + 20) p.x = -20;
+        if (p.x < -20) p.x = W + 20;
+    });
+}
+
+function drawPetals() {
+    petals.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = `hsla(${p.hue},70%,70%,${p.alpha})`;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size, p.size*0.5, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SHOCKWAVE
+// ═══════════════════════════════════════════════════════════════
+function spawnShockwave(x, y) {
+    shockwaves.push({ x, y, radius: 0, maxRadius: Math.max(W,H)*0.8, life: 1 });
+}
+
+function updateShockwaves() {
+    for (let i = shockwaves.length-1; i >= 0; i--) {
+        const s = shockwaves[i];
+        s.radius += (s.maxRadius - s.radius) * 0.06;
+        s.life -= 0.015;
+        if (s.life <= 0) shockwaves.splice(i, 1);
+    }
+}
+
+function drawShockwaves() {
+    shockwaves.forEach(s => {
+        ctx.strokeStyle = `rgba(255,105,180,${(s.life*0.4).toFixed(2)})`;
+        ctx.lineWidth = Math.max(1, 4 * s.life);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI*2);
+        ctx.stroke();
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+const PHASE_DURATIONS = {
+    MOSAIC_IN: 2.0,
+    MOSAIC_HOLD: 2.5,
+    ZOOM: 3.5,
+    ZOOM_HOLD: 2.5,
+    FLASH: 0.4,
+    EXPLOSION: 2.0,
+    FLY: 0.8,
+    HEART: 3.0,
+    STAR: 3.0,
+    FLOWER: 3.0,
+    REFORM: 3.5,
+    INTERACTIVE: Infinity,
+};
+
+function setPhase(name) {
+    phase = name;
+    phaseStartTime = performance.now();
+    phaseTime = 0;
+
+    // Phase-specific initialization
+    if (name === 'MOSAIC_IN') {
+        document.getElementById('scanlines').style.opacity = '0.6';
+    }
+    if (name === 'ZOOM') {
+        showPhaseMsg('Nhìn kỹ hơn nhé... 🔍');
+    }
+    if (name === 'ZOOM_HOLD') {
+        showPhaseMsg('Mỗi từ là một lời chúc dành cho bạn ✨');
+    }
+    if (name === 'FLASH') {
+        document.getElementById('flash').style.transition = 'opacity 0.05s';
+        document.getElementById('flash').style.opacity = '1';
+        document.getElementById('scanlines').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('flash').style.transition = 'opacity 0.35s';
+            document.getElementById('flash').style.opacity = '0';
+        }, 80);
+
+        // Initialize particles at image 1 positions
+        initParticlesFromImage1();
+        spawnShockwave(W/2, H/2);
+        spawnConfetti(W/2, H/2, 80);
+    }
+    if (name === 'EXPLOSION') {
+        showPhaseMsg('');
+        // Give particles explosion velocity
+        particles.forEach(p => {
+            const dx = p.x - W/2;
+            const dy = p.y - H/2;
+            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+            p.vx = (dx / dist) * rand(8, 22) + rand(-4, 4);
+            p.vy = (dy / dist) * rand(8, 22) + rand(-6, 2);
+            p.shape = Math.floor(rand(0, 4));
+            p.size = rand(3, 8);
+        });
+    }
+    if (name === 'HEART') {
+        showPhaseMsg('💕');
+        setParticleTargets(heartPts);
+    }
+    if (name === 'STAR') {
+        showPhaseMsg('⭐');
+        setParticleTargets(starPts);
+    }
+    if (name === 'FLOWER') {
+        showPhaseMsg('🌸');
+        setParticleTargets(flowerPts);
+    }
+    if (name === 'REFORM') {
+        showPhaseMsg('');
+        setParticleTargets(img2Points);
+        particles.forEach(p => { p.shape = 0; p.tsize = rand(2.5, 4.5); });
+    }
+    if (name === 'INTERACTIVE') {
+        showPhaseMsg('Di chuột / chạm để tương tác 💝');
+        setTimeout(() => showPhaseMsg(''), 3000);
+        setTimeout(() => {
+            const panel = document.getElementById('finalPanel');
+            panel.classList.add('show');
+            typewriterMessage();
+        }, 2000);
+    }
+}
+
+function setParticleTargets(pts) {
+    for (let i = 0; i < particles.length; i++) {
+        const t = pts[i];
+        particles[i].tx = t.x;
+        particles[i].ty = t.y;
+        particles[i].tr = t.r;
+        particles[i].tg = t.g;
+        particles[i].tb = t.b;
+        particles[i].tsize = rand(3.5, 7);
+    }
+}
+
+function initParticlesFromImage1() {
+    particles = [];
+    for (let i = 0; i < img1Points.length; i++) {
+        const p = img1Points[i];
+        particles.push({
+            x: p.x, y: p.y,
+            vx: 0, vy: 0,
+            tx: p.x, ty: p.y,
+            r: p.r, g: p.g, b: p.b,
+            tr: p.r, tg: p.g, tb: p.b,
+            size: 3, tsize: 3,
+            shape: 0,
+            alpha: 1,
+        });
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════════
+function showPhaseMsg(text) {
+    const el = document.getElementById('phaseMsgText');
+    el.classList.remove('show');
+    if (text) {
+        el.textContent = text;
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+    }
+}
+
+function typewriterMessage() {
+    const name = recipientName.trim() || 'Bạn';
+    const lines = [
+        { el: 'finalLine1', text: `Gửi đến ${name},`, cls: 'name-highlight' },
+        { el: 'finalLine2', text: `Bạn thật xinh đẹp, giỏi giang và tuyệt vời!` },
+        { el: 'finalLine3', text: `Chúc bạn ngày 8/3 thật nhiều niềm vui và hạnh phúc! 💐` },
+    ];
+    let delay = 0;
+    lines.forEach((line, idx) => {
+        const el = document.getElementById(line.el);
+        el.textContent = '';
+        if (line.cls) el.classList.add(line.cls);
+        const chars = line.text.split('');
+        chars.forEach((ch, ci) => {
+            setTimeout(() => { el.textContent += ch; }, delay + ci * 40);
+        });
+        delay += chars.length * 40 + 300;
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UPDATE
+// ═══════════════════════════════════════════════════════════════
+function update(dt) {
+    phaseTime = (performance.now() - phaseStartTime) / 1000;
+
+    // Phase transitions
+    const dur = PHASE_DURATIONS[phase];
+    if (dur && phaseTime >= dur && dur !== Infinity) {
+        const transitions = {
+            MOSAIC_IN: 'MOSAIC_HOLD',
+            MOSAIC_HOLD: 'ZOOM',
+            ZOOM: 'ZOOM_HOLD',
+            ZOOM_HOLD: 'FLASH',
+            FLASH: 'EXPLOSION',
+            EXPLOSION: 'FLY',
+            FLY: 'HEART',
+            HEART: 'STAR',
+            STAR: 'FLOWER',
+            FLOWER: 'REFORM',
+            REFORM: 'INTERACTIVE',
+        };
+        if (transitions[phase]) setPhase(transitions[phase]);
+    }
+
+    // Zoom animation
+    if (phase === 'ZOOM') {
+        const t = easeInOutCubic(clamp(phaseTime / PHASE_DURATIONS.ZOOM, 0, 1));
+        zoomLevel = lerp(CFG.ZOOM_START, CFG.ZOOM_END, t);
+    }
+
+    // Particle physics
+    if (phase === 'EXPLOSION' || phase === 'FLY') {
+        particles.forEach(p => {
+            p.vy += 0.08; // gravity
+            p.vx *= 0.993;
+            p.vy *= 0.993;
+            p.x += p.vx;
+            p.y += p.vy;
+            // Color lerp toward shape colors
+            p.r += (p.tr - p.r) * 0.02;
+            p.g += (p.tg - p.g) * 0.02;
+            p.b += (p.tb - p.b) * 0.02;
+        });
+    } else if (phase === 'HEART' || phase === 'STAR' || phase === 'FLOWER' ||
+               phase === 'REFORM' || phase === 'INTERACTIVE') {
+        const isInteractive = (phase === 'INTERACTIVE');
+        const spring = isInteractive ? CFG.SPRING * 1.2 : CFG.SPRING;
+        const damp = isInteractive ? CFG.DAMPING : 0.86;
+
+        particles.forEach(p => {
+            // Spring to target
+            p.vx += (p.tx - p.x) * spring;
+            p.vy += (p.ty - p.y) * spring;
+
+            // Mouse repulsion (interactive mode or always for fun)
+            if (mouseActive || isInteractive) {
+                const dx = p.x - mouseX;
+                const dy = p.y - mouseY;
+                const distSq = dx*dx + dy*dy;
+                const R = CFG.MOUSE_RADIUS;
+                if (distSq < R*R && distSq > 0.1) {
+                    const dist = Math.sqrt(distSq);
+                    const force = (R - dist) / R * CFG.MOUSE_FORCE;
+                    p.vx += (dx / dist) * force;
+                    p.vy += (dy / dist) * force;
+                }
+            }
+
+            p.vx *= damp;
+            p.vy *= damp;
+            p.x += p.vx;
+            p.y += p.vy;
+
+            // Color & size lerp
+            p.r += (p.tr - p.r) * CFG.COLOR_LERP;
+            p.g += (p.tg - p.g) * CFG.COLOR_LERP;
+            p.b += (p.tb - p.b) * CFG.COLOR_LERP;
+            p.size += (p.tsize - p.size) * 0.05;
+        });
+    }
+
+    updateConfetti();
+    updatePetals();
+    updateShockwaves();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════
+function render() {
+    // Trail effect for particle phases, clear for mosaic phases
+    const particlePhases = ['EXPLOSION','FLY','HEART','STAR','FLOWER','REFORM','INTERACTIVE'];
+    if (particlePhases.includes(phase)) {
+        ctx.fillStyle = 'rgba(10, 10, 26, 0.18)';
+        ctx.fillRect(0, 0, W, H);
+    } else {
+        ctx.fillStyle = '#0a0a1a';
+        ctx.fillRect(0, 0, W, H);
+    }
+
+    // Draw background petals
+    drawPetals();
+
+    // Mosaic phases
+    if (phase === 'MOSAIC_IN') {
+        ctx.globalAlpha = clamp(phaseTime / 1.5, 0, 1);
+        drawMosaic();
+        ctx.globalAlpha = 1;
+    } else if (phase === 'MOSAIC_HOLD' || phase === 'ZOOM' || phase === 'ZOOM_HOLD') {
+        drawMosaic();
+        // Subtle glow overlay during zoom
+        if (phase === 'ZOOM' || phase === 'ZOOM_HOLD') {
+            const t = (phase === 'ZOOM') ? phaseTime / PHASE_DURATIONS.ZOOM : 1;
+            ctx.fillStyle = `rgba(255,105,180,${(0.03 * t).toFixed(3)})`;
+            ctx.fillRect(0, 0, W, H);
+        }
+    } else if (phase === 'FLASH') {
+        // Brief flash, particles start appearing
+        const t = phaseTime / PHASE_DURATIONS.FLASH;
+        if (t > 0.3) {
+            ctx.globalAlpha = (t - 0.3) / 0.7;
+            particles.forEach(drawParticle);
+            ctx.globalAlpha = 1;
+        }
+    } else if (particlePhases.includes(phase)) {
+        // Draw particles
+        particles.forEach(drawParticle);
+
+        // Glow effect for formations
+        if (phase === 'HEART' || phase === 'STAR' || phase === 'FLOWER') {
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = 'rgba(255,105,180,0.3)';
+            // Draw a few "highlight" particles with glow
+            for (let i = 0; i < particles.length; i += 12) {
+                const p = particles[i];
+                ctx.fillStyle = `rgba(255,255,255,0.15)`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * 0.8, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    // Shockwaves
+    drawShockwaves();
+    // Confetti
+    drawConfetti();
+
+    // Vignette (always, subtle)
+    const vignette = ctx.createRadialGradient(W/2, H/2, W*0.3, W/2, H/2, W*0.75);
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.5)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════════════
+let lastTime = 0;
+function loop(now) {
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+
+    if (phase !== 'IDLE') {
+        update(dt);
+        render();
+    }
+
+    requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EVENT HANDLERS
+// ═══════════════════════════════════════════════════════════════
+function setupEvents() {
+    canvas.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        mouseActive = true;
+    });
+    canvas.addEventListener('mouseleave', () => { mouseActive = false; mouseX = -9999; mouseY = -9999; });
+
+    canvas.addEventListener('click', (e) => {
+        if (phase === 'INTERACTIVE') {
+            spawnShockwave(e.clientX, e.clientY);
+            spawnConfetti(e.clientX, e.clientY, 40);
+            // Burst particles outward from click
+            particles.forEach(p => {
+                const dx = p.x - e.clientX;
+                const dy = p.y - e.clientY;
+                const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+                if (dist < 180) {
+                    const force = (180 - dist) / 180 * 18;
+                    p.vx += (dx / dist) * force;
+                    p.vy += (dy / dist) * force;
+                }
+            });
+        }
+    });
+
+    // Touch support
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const t = e.touches[0];
+        mouseX = t.clientX;
+        mouseY = t.clientY;
+        mouseActive = true;
+    }, { passive: false });
+    canvas.addEventListener('touchend', () => { mouseActive = false; mouseX = -9999; mouseY = -9999; });
+    canvas.addEventListener('touchstart', (e) => {
+        if (phase === 'INTERACTIVE') {
+            const t = e.touches[0];
+            spawnShockwave(t.clientX, t.clientY);
+            spawnConfetti(t.clientX, t.clientY, 30);
+        }
+    });
+
+    // Skip to interactive on spacebar (for impatient people)
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && phase !== 'IDLE' && phase !== 'INTERACTIVE') {
+            e.preventDefault();
+            // Fast-forward
+            if (!particles.length) initParticlesFromImage1();
+            setPhase('REFORM');
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INTRO UI HANDLERS
+// ═══════════════════════════════════════════════════════════════
+function setupIntroUI() {
+    // File upload handlers
+    const file1 = document.getElementById('file1');
+    const file2 = document.getElementById('file2');
+    const preview1 = document.getElementById('preview1');
+    const preview2 = document.getElementById('preview2');
+
+    file1.addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            image1 = await fileToImage(e.target.files[0]);
+            preview1.src = image1.src;
+            preview1.style.display = 'block';
+        }
+    });
+    file2.addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            image2 = await fileToImage(e.target.files[0]);
+            preview2.src = image2.src;
+            preview2.style.display = 'block';
+        }
+    });
+
+    // Start button
+    document.getElementById('startBtn').addEventListener('click', () => startExperience(false));
+    document.getElementById('demoBtn').addEventListener('click', () => startExperience(true));
+}
+
+async function startExperience(useDemo) {
+    recipientName = document.getElementById('nameInput').value;
+
+    if (useDemo || !image1) image1 = createDefaultImage1();
+    if (useDemo || !image2) image2 = createDefaultImage2();
+
+    // Hide overlay
+    document.getElementById('overlay').classList.add('hidden');
+
+    // Process everything
+    buildMosaic(image1);
+    img1Points = sampleImage(image1, CFG.PARTICLE_COUNT, W, H);
+    img2Points = sampleImage(image2, CFG.PARTICLE_COUNT, W, H);
+    heartPts = generateShapePoints('heart', CFG.PARTICLE_COUNT, W, H);
+    starPts = generateShapePoints('star', CFG.PARTICLE_COUNT, W, H);
+    flowerPts = generateShapePoints('flower', CFG.PARTICLE_COUNT, W, H);
+
+    // Start the show!
+    setPhase('MOSAIC_IN');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FLOATING HEARTS (CSS background)
+// ═══════════════════════════════════════════════════════════════
+function createFloatingHearts() {
+    const container = document.getElementById('bgHearts');
+    const emojis = ['💕', '🌸', '✨', '💗', '⭐', '🌺', '💖', '💝', '🌹', '🦋'];
+    for (let i = 0; i < 20; i++) {
+        const span = document.createElement('span');
+        span.textContent = emojis[i % emojis.length];
+        span.style.left = rand(0, 100) + '%';
+        span.style.fontSize = rand(14, 28) + 'px';
+        span.style.animationDuration = rand(8, 18) + 's';
+        span.style.animationDelay = rand(0, 10) + 's';
+        container.appendChild(span);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INITIALIZATION
+// ═══════════════════════════════════════════════════════════════
+let DPR = 1;
+
+function resizeCanvas() {
+    DPR = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    // Improve text rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+}
+
+function init() {
+    canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
+    resizeCanvas();
+
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        // Re-generate petals for new size
+        petals = [];
+        initPetals();
+    });
+
+    createFloatingHearts();
+    initPetals();
+    setupEvents();
+    setupIntroUI();
+
+    // Start render loop
+    requestAnimationFrame(loop);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
