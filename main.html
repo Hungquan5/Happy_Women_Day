@@ -10,7 +10,6 @@
         html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a1a; font-family: 'Quicksand', sans-serif; }
         canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
 
-        /* ===== Floating Hearts Background (CSS) ===== */
         .bg-hearts { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
         .bg-hearts span {
             position: absolute; bottom: -40px; font-size: 20px; animation: floatUp linear infinite; opacity: 0.3;
@@ -22,7 +21,6 @@
             100% { transform: translateY(-110vh) rotate(720deg) scale(0.3); opacity: 0; }
         }
 
-        /* ===== Overlay (Intro Screen) ===== */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100;
             display: flex; align-items: center; justify-content: center;
@@ -87,7 +85,6 @@
         }
         .btn.secondary:hover { background: rgba(255,255,255,0.12); }
 
-        /* ===== Phase Message ===== */
         #phaseMsg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50;
             display: flex; align-items: center; justify-content: center; pointer-events: none;
@@ -99,7 +96,6 @@
         }
         #phaseMsg .text.show { opacity: 1; }
 
-        /* ===== Final Panel ===== */
         #finalPanel {
             position: fixed; bottom: 0; left: 0; width: 100%; z-index: 60;
             display: flex; justify-content: center; padding: 24px;
@@ -117,20 +113,17 @@
         .final-card .name-highlight { color: #ffd700; font-weight: 600; font-size: 1.15em; }
         .final-card .btn { margin-top: 16px; }
 
-        /* ===== Screen Flash ===== */
         #flash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 40;
             background: #fff; opacity: 0; pointer-events: none; transition: opacity 0.1s;
         }
 
-        /* ===== Scanlines (Matrix vibe) ===== */
         #scanlines {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
             background: repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, transparent 1px, transparent 3px);
             pointer-events: none; opacity: 0; transition: opacity 0.5s;
         }
 
-        /* ===== Responsive ===== */
         @media (max-width: 600px) {
             .intro-card { padding: 28px 20px; }
             .intro-card h1 { font-size: 2em; }
@@ -141,27 +134,16 @@
 </head>
 <body>
 
-<!-- Floating hearts background -->
 <div class="bg-hearts" id="bgHearts"></div>
-
-<!-- Screen flash effect -->
 <div id="flash"></div>
-
-<!-- Scanlines overlay -->
 <div id="scanlines"></div>
-
-<!-- Main canvas -->
 <canvas id="canvas"></canvas>
-
-<!-- Phase message overlay -->
 <div id="phaseMsg"><div class="text" id="phaseMsgText"></div></div>
 
-<!-- Intro overlay -->
 <div id="overlay">
     <div class="intro-card">
         <h1>✨ Happy Women's Day ✨</h1>
         <p class="subtitle">Trải nghiệm tương tác dành tặng những người phụ nữ tuyệt vời</p>
-
         <div class="upload-area">
             <div class="upload-box" id="box1">
                 <span class="icon">🖼️</span>
@@ -176,12 +158,10 @@
                 <img id="preview2" alt="">
             </div>
         </div>
-
         <div class="name-field">
             <label>Tên người nhận 💝</label>
             <input type="text" id="nameInput" placeholder="VD: Hà Anh">
         </div>
-
         <div class="btn-group">
             <button class="btn primary" id="startBtn">✨ Bắt đầu trải nghiệm</button>
             <button class="btn secondary" id="demoBtn">▶ Xem Demo</button>
@@ -189,7 +169,6 @@
     </div>
 </div>
 
-<!-- Final panel -->
 <div id="finalPanel">
     <div class="final-card">
         <h2>🌸 Happy Women's Day 🌸</h2>
@@ -203,83 +182,93 @@
 </div>
 
 <script>
+"use strict";
+
 // ═══════════════════════════════════════════════════════════════
 //  CONFIGURATION
 // ═══════════════════════════════════════════════════════════════
 const CFG = {
-    PARTICLE_COUNT: 8000,
+    PARTICLE_COUNT: 10000,
     SPRING: 0.045,
     DAMPING: 0.88,
     MOUSE_RADIUS: 120,
+    MOUSE_RADIUS_SQ: 120 * 120,
     MOUSE_FORCE: 12,
     COLOR_LERP: 0.045,
-    MOSAIC_SCALE: 4,
-    FONT_SIZE: 11,
-    CHAR_W: 6.6,
-    LINE_H: 13,
-    ZOOM_START: null, // calculated later
-    ZOOM_END: 2.2,
+    MAX_MOSAIC_PIXELS: 20_000_000,
+    ZOOM_END: 3.0,
+    IMG_FIT_FACTOR: 0.88,
 };
 
 const WORDS = [
     "Xinh đẹp ", "Giỏi giang ", "Tuyệt vời ", "Dịu dàng ", "Mạnh mẽ ",
     "Thông minh ", "Tài năng ", "Kiên cường ", "Rạng rỡ ", "Tỏa sáng ",
     "Yêu thương ", "Happy 8/3 ", "Women's Day ", "Hạnh phúc ",
-    "♡ ", "✿ ", "★ ", "Tuyệt vời ", "Amazing ",
+    "♡ ", "✿ ", "★ ", "Amazing ",
 ];
+
+// Phase sets — O(1) lookup instead of Array.includes() per frame
+const PARTICLE_PHASES = new Set([
+    'EXPLOSION', 'FLY', 'HEART', 'STAR', 'FLOWER', 'REFORM', 'INTERACTIVE'
+]);
+const SPRING_PHASES = new Set([
+    'HEART', 'STAR', 'FLOWER', 'REFORM', 'INTERACTIVE'
+]);
 
 // ═══════════════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════════════
-let canvas, ctx, W, H;
+let canvas, ctx, W, H, DPR = 1;
 let image1 = null, image2 = null;
 let recipientName = '';
+
 let particles = [];
+let particleCount = 0;
+
 let confetti = [];
+let confettiCount = 0;
 let petals = [];
+let shockwaves = [];
+let shockwaveCount = 0;
+
 let mosaicCanvas = null;
+let mosaicMaxZoom = 3.0;
+let zoomLevel = 1.0;
+
 let phase = 'IDLE';
 let phaseTime = 0;
 let phaseStartTime = 0;
-let mouseX = -9999, mouseY = -9999, mouseActive = false;
-let img1Points = [], img2Points = [];
-let heartPts = [], starPts = [], flowerPts = [];
-let shockwaves = [];
 
-// Zoom state for mosaic
-let zoomLevel = 0.4;
-let zoomCx = 0, zoomCy = 0;
+let mouseX = -9999, mouseY = -9999, mouseActive = false;
+
+let img1Points = null, img2Points = null;
+let heartPts = null, starPts = null, flowerPts = null;
+
+// Cached overlay — built once, redrawn from buffer (no gradient calc per frame)
+let vignetteCanvas = null;
 
 // ═══════════════════════════════════════════════════════════════
 //  UTILITIES
 // ═══════════════════════════════════════════════════════════════
-function lerp(a, b, t) { return a + (b - a) * t; }
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-function rand(a, b) { return a + Math.random() * (b - a); }
+const lerp  = (a, b, t) => a + (b - a) * t;
+const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
+const rand  = (a, b) => a + Math.random() * (b - a);
+
 function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        const j = (Math.random() * (i + 1)) | 0;
+        const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
     }
 }
-function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
-function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
-function easeOutBack(t) { const c = 1.70158; return 1 + (c+1) * Math.pow(t-1,3) + c * Math.pow(t-1,2); }
 
-function loadImage(src) {
-    return new Promise((res, rej) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => res(img);
-        img.onerror = rej;
-        img.src = src;
-    });
+function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2;
 }
 
 function fileToImage(file) {
-    return new Promise((res) => {
+    return new Promise(res => {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
             const img = new Image();
             img.onload = () => res(img);
             img.src = e.target.result;
@@ -289,254 +278,262 @@ function fileToImage(file) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  DEFAULT IMAGES (canvas-drawn)
+//  CACHED VIGNETTE — built once per resize, drawn from buffer
+// ═══════════════════════════════════════════════════════════════
+function buildVignetteCache() {
+    vignetteCanvas = document.createElement('canvas');
+    vignetteCanvas.width = W;
+    vignetteCanvas.height = H;
+    const vCtx = vignetteCanvas.getContext('2d');
+    const g = vCtx.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.75);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.45)');
+    vCtx.fillStyle = g;
+    vCtx.fillRect(0, 0, W, H);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DEFAULT DEMO IMAGES (800×800 canvas-drawn)
 // ═══════════════════════════════════════════════════════════════
 function createDefaultImage1() {
-    const S = 800;
-    const c = document.createElement('canvas');
+    const S = 800, c = document.createElement('canvas');
     c.width = S; c.height = S;
     const g = c.getContext('2d');
-    const r = S / 500; // ratio for scaling all positions
+    const r = S / 500;
 
-    // Background gradient
     const bg = g.createRadialGradient(S/2, S/2, 0, S/2, S/2, S*0.7);
     bg.addColorStop(0, '#2d1b4e');
     bg.addColorStop(1, '#0a0a1a');
     g.fillStyle = bg;
     g.fillRect(0, 0, S, S);
 
-    // Decorative circles
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 30; i++) {
         g.beginPath();
-        g.arc(rand(50*r, S-50*r), rand(50*r, S-50*r), rand(8,40)*r, 0, Math.PI*2);
-        g.fillStyle = `hsla(${rand(300,360)}, 80%, 60%, ${rand(0.05,0.2)})`;
+        g.arc(rand(50*r, S-50*r), rand(50*r, S-50*r), rand(8,35)*r, 0, Math.PI*2);
+        g.fillStyle = `hsla(${rand(300,360)},80%,60%,${rand(0.05,0.15)})`;
         g.fill();
     }
 
-    // "8" 
-    g.fillStyle = '#ff69b4';
-    g.font = `bold ${Math.round(220*r)}px Georgia, serif`;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.shadowColor = '#ff69b4';
-    g.shadowBlur = 60;
+    g.fillStyle = '#ff69b4'; g.font = `bold ${220*r|0}px Georgia,serif`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = '#ff69b4'; g.shadowBlur = 50;
     g.fillText('8', 170*r, 260*r);
 
-    // "/" 
-    g.fillStyle = '#ffd700';
-    g.font = `bold ${Math.round(160*r)}px Georgia, serif`;
-    g.shadowColor = '#ffd700';
-    g.shadowBlur = 40;
+    g.fillStyle = '#ffd700'; g.font = `bold ${160*r|0}px Georgia,serif`;
+    g.shadowColor = '#ffd700'; g.shadowBlur = 35;
     g.fillText('/', 280*r, 250*r);
 
-    // "3"
-    g.fillStyle = '#e040fb';
-    g.font = `bold ${Math.round(220*r)}px Georgia, serif`;
-    g.shadowColor = '#e040fb';
-    g.shadowBlur = 60;
+    g.fillStyle = '#e040fb'; g.font = `bold ${220*r|0}px Georgia,serif`;
+    g.shadowColor = '#e040fb'; g.shadowBlur = 50;
     g.fillText('3', 380*r, 260*r);
     g.shadowBlur = 0;
 
-    // Small hearts
-    g.font = `${Math.round(36*r)}px serif`;
+    g.font = `${30*r|0}px serif`;
     const hearts = ['💝','🌸','✨','💗','🌺','⭐','💖'];
-    for (let i = 0; i < 24; i++) {
-        g.fillText(hearts[i%hearts.length], rand(20*r, S-30*r), rand(20*r, S-20*r));
+    for (let i = 0; i < 20; i++) {
+        g.fillText(hearts[i % hearts.length], rand(20*r, S-30*r), rand(20*r, S-20*r));
     }
-
     return c;
 }
 
 function createDefaultImage2() {
-    const S = 800;
-    const c = document.createElement('canvas');
+    const S = 800, c = document.createElement('canvas');
     c.width = S; c.height = S;
     const g = c.getContext('2d');
-    const ratio = S / 500;
+    const k = S / 500;
 
     g.fillStyle = '#0a0a1a';
     g.fillRect(0, 0, S, S);
 
-    // Big heart
-    const cx = S/2, cy = 230*ratio, sc = 13*ratio;
+    const cx = S/2, cy = 230*k, sc = 13*k;
     const grad = g.createRadialGradient(cx, cy, 0, cx, cy+40, sc*18);
     grad.addColorStop(0, '#ff1493');
     grad.addColorStop(0.5, '#e91e63');
     grad.addColorStop(1, '#9c27b0');
     g.fillStyle = grad;
-    g.shadowColor = '#ff1493';
-    g.shadowBlur = 60;
+    g.shadowColor = '#ff1493'; g.shadowBlur = 50;
     g.beginPath();
     for (let t = 0; t <= Math.PI*2; t += 0.01) {
-        const hx = 16 * Math.pow(Math.sin(t), 3);
+        const hx = 16 * Math.sin(t) ** 3;
         const hy = -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t));
-        if (t === 0) g.moveTo(cx + hx*sc, cy + hy*sc);
-        else g.lineTo(cx + hx*sc, cy + hy*sc);
+        t === 0 ? g.moveTo(cx + hx*sc, cy + hy*sc) : g.lineTo(cx + hx*sc, cy + hy*sc);
     }
-    g.closePath();
-    g.fill();
-    g.shadowBlur = 0;
+    g.closePath(); g.fill(); g.shadowBlur = 0;
 
-    // Text inside heart
     g.fillStyle = '#fff';
-    g.font = `bold ${Math.round(36*ratio)}px Quicksand, sans-serif`;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText('Happy', cx, cy - 20*ratio);
-    g.font = `bold ${Math.round(54*ratio)}px Georgia, serif`;
-    g.fillText('8/3', cx, cy + 30*ratio);
+    g.font = `bold ${36*k|0}px Quicksand,sans-serif`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('Happy', cx, cy - 20*k);
+    g.font = `bold ${54*k|0}px Georgia,serif`;
+    g.fillText('8/3', cx, cy + 30*k);
 
-    // Small sparkles
-    g.font = `${Math.round(26*ratio)}px serif`;
-    for (let i = 0; i < 28; i++) {
-        const a = rand(0, Math.PI*2);
-        const r = rand(sc*16/ratio, sc*20/ratio);
-        g.fillText(['✨','💫','⭐','🌟'][i%4], cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+    g.font = `${24*k|0}px serif`;
+    const sparkles = ['✨','💫','⭐','🌟'];
+    for (let i = 0; i < 24; i++) {
+        const a = rand(0, Math.PI*2), rr = rand(sc*16/k, sc*20/k);
+        g.fillText(sparkles[i%4], cx + Math.cos(a)*rr, cy + Math.sin(a)*rr);
     }
-
     return c;
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  IMAGE PROCESSING — sample pixels from an image/canvas
+//  IMAGE SAMPLING — aspect-ratio-aware "contain" fit
 // ═══════════════════════════════════════════════════════════════
 function sampleImage(imgSource, targetCount, dispW, dispH) {
-    const tmp = document.createElement('canvas');
-    const maxDim = 400;
+    const maxDim = 550;
+    const imgAR = imgSource.width / imgSource.height;
     let sw, sh;
-    if (imgSource.width >= imgSource.height) {
-        sw = maxDim;
-        sh = Math.floor(maxDim * imgSource.height / imgSource.width);
-    } else {
-        sh = maxDim;
-        sw = Math.floor(maxDim * imgSource.width / imgSource.height);
-    }
+    if (imgAR >= 1) { sw = maxDim; sh = (maxDim / imgAR) | 0; }
+    else             { sh = maxDim; sw = (maxDim * imgAR) | 0; }
+
+    const tmp = document.createElement('canvas');
     tmp.width = sw; tmp.height = sh;
     const tCtx = tmp.getContext('2d');
     tCtx.drawImage(imgSource, 0, 0, sw, sh);
     const data = tCtx.getImageData(0, 0, sw, sh).data;
 
-    // Fit to display canvas
-    const scale = Math.min(dispW / sw, dispH / sh) * 0.82;
-    const offX = (dispW - sw * scale) / 2;
-    const offY = (dispH - sh * scale) / 2;
+    // "Contain" fit: maintain aspect ratio, centered, with padding
+    const fitScale = Math.min(dispW / sw, dispH / sh) * CFG.IMG_FIT_FACTOR;
+    const offX = (dispW - sw * fitScale) / 2;
+    const offY = (dispH - sh * fitScale) / 2;
 
-    const step = Math.max(1, Math.floor(Math.sqrt(sw * sh / (targetCount * 1.4))));
-    let pts = [];
+    const step = Math.max(1, Math.sqrt(sw * sh / (targetCount * 1.3)) | 0);
+    const pts = [];
     for (let y = 0; y < sh; y += step) {
         for (let x = 0; x < sw; x += step) {
-            const i = (y * sw + x) * 4;
-            const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-            if (a < 30) continue;
-            pts.push({ x: offX + x*scale, y: offY + y*scale, r, g, b });
+            const i = (y * sw + x) << 2;
+            if (data[i + 3] < 30) continue;
+            pts.push({
+                x: offX + x * fitScale,
+                y: offY + y * fitScale,
+                r: data[i], g: data[i+1], b: data[i+2]
+            });
         }
     }
-
     shuffle(pts);
-    if (pts.length > targetCount) pts = pts.slice(0, targetCount);
+
+    if (pts.length > targetCount) pts.length = targetCount;
+    const base = pts.length;
     while (pts.length < targetCount) {
-        const s = pts[Math.floor(Math.random()*pts.length)];
-        pts.push({ x: s.x+rand(-3,3), y: s.y+rand(-3,3), r: s.r, g: s.g, b: s.b });
+        const s = pts[(Math.random() * base) | 0];
+        pts.push({ x: s.x + rand(-2, 2), y: s.y + rand(-2, 2), r: s.r, g: s.g, b: s.b });
     }
+
+    // Free temp canvas immediately
+    tmp.width = 0; tmp.height = 0;
     return pts;
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  SHAPE GENERATORS (heart / star / flower)
+//  SHAPE GENERATORS — heart / star / flower
 // ═══════════════════════════════════════════════════════════════
 function generateShapePoints(shapeName, count, cw, ch) {
+    const sz = 300;
     const tmp = document.createElement('canvas');
-    const sz = 360;
     tmp.width = sz; tmp.height = sz;
     const g = tmp.getContext('2d');
 
     if (shapeName === 'heart') {
-        g.fillStyle = '#f00';
-        g.beginPath();
+        g.fillStyle = '#f00'; g.beginPath();
         const cx2 = sz/2, cy2 = sz/2.15, s = sz/35;
         for (let t = 0; t <= Math.PI*2; t += 0.02) {
-            const hx = 16*Math.pow(Math.sin(t),3);
+            const hx = 16 * Math.sin(t)**3;
             const hy = -(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
-            if (t === 0) g.moveTo(cx2+hx*s, cy2+hy*s); else g.lineTo(cx2+hx*s, cy2+hy*s);
+            t === 0 ? g.moveTo(cx2+hx*s, cy2+hy*s) : g.lineTo(cx2+hx*s, cy2+hy*s);
         }
         g.closePath(); g.fill();
     } else if (shapeName === 'star') {
-        g.fillStyle = '#ff0';
-        g.beginPath();
-        const cx2=sz/2, cy2=sz/2, oR=sz*0.45, iR=sz*0.18;
+        g.fillStyle = '#ff0'; g.beginPath();
+        const cx2 = sz/2, cy2 = sz/2, oR = sz*0.45, iR = sz*0.18;
         for (let i = 0; i < 10; i++) {
-            const r = i%2===0 ? oR : iR;
-            const a = (i*Math.PI/5) - Math.PI/2;
-            if (i===0) g.moveTo(cx2+Math.cos(a)*r, cy2+Math.sin(a)*r);
-            else g.lineTo(cx2+Math.cos(a)*r, cy2+Math.sin(a)*r);
+            const r = i % 2 === 0 ? oR : iR;
+            const a = i * Math.PI / 5 - Math.PI / 2;
+            i === 0 ? g.moveTo(cx2+Math.cos(a)*r, cy2+Math.sin(a)*r)
+                     : g.lineTo(cx2+Math.cos(a)*r, cy2+Math.sin(a)*r);
         }
         g.closePath(); g.fill();
-    } else { // flower
-        const cx2=sz/2, cy2=sz/2, pR=sz*0.2;
+    } else {
+        const cx2 = sz/2, cy2 = sz/2, pR = sz*0.2;
         for (let i = 0; i < 6; i++) {
-            const a = (i/6)*Math.PI*2;
+            const a = (i/6) * Math.PI * 2;
             g.fillStyle = `hsl(${320+i*12},80%,65%)`;
             g.beginPath();
             g.ellipse(cx2+Math.cos(a)*pR*0.7, cy2+Math.sin(a)*pR*0.7, pR, pR*0.55, a, 0, Math.PI*2);
             g.fill();
         }
         g.fillStyle = '#ffe066';
-        g.beginPath(); g.arc(cx2,cy2,pR*0.35,0,Math.PI*2); g.fill();
+        g.beginPath(); g.arc(cx2, cy2, pR*0.35, 0, Math.PI*2); g.fill();
     }
 
-    const data = g.getImageData(0,0,sz,sz).data;
+    // Encode filled pixel coords as packed int (x | y<<16) — saves ~40% memory vs {x,y} objects
+    const data = g.getImageData(0, 0, sz, sz).data;
     const filled = [];
     for (let y = 0; y < sz; y++) {
         for (let x = 0; x < sz; x++) {
-            if (data[(y*sz+x)*4+3] > 128) filled.push({x, y});
+            if (data[((y * sz + x) << 2) + 3] > 128) filled.push(x | (y << 16));
         }
     }
     shuffle(filled);
 
-    const dispScale = Math.min(cw, ch) * 0.65 / sz;
-    const offX = (cw - sz*dispScale) / 2;
-    const offY = (ch - sz*dispScale) / 2;
+    const fitDim = Math.min(cw, ch) * 0.6;
+    const dispScale = fitDim / sz;
+    const offX = (cw - sz * dispScale) / 2;
+    const offY = (ch - sz * dispScale) / 2;
 
     const pts = [];
+    const fLen = filled.length;
     for (let i = 0; i < count; i++) {
-        const p = filled[i % filled.length];
-        const jx = (i >= filled.length) ? rand(-2,2) : 0;
-        const jy = (i >= filled.length) ? rand(-2,2) : 0;
-        const px = offX + (p.x + jx) * dispScale;
-        const py = offY + (p.y + jy) * dispScale;
+        const packed = filled[i % fLen];
+        const px = packed & 0xFFFF;
+        const py = packed >> 16;
+        const jx = i >= fLen ? rand(-2, 2) : 0;
+        const jy = i >= fLen ? rand(-2, 2) : 0;
 
         let r, g2, b;
-        if (shapeName === 'heart') { r=200+rand(0,55); g2=20+rand(0,80); b=60+rand(0,80); }
-        else if (shapeName === 'star') { r=255; g2=180+rand(0,75); b=rand(0,60); }
-        else { r=200+rand(0,55); g2=80+rand(0,120); b=170+rand(0,85); }
-        pts.push({ x: px, y: py, r, g: g2, b });
+        if (shapeName === 'heart')      { r = 200+rand(0,55); g2 = 20+rand(0,80); b = 60+rand(0,80); }
+        else if (shapeName === 'star')  { r = 255; g2 = 180+rand(0,75); b = rand(0,60); }
+        else                            { r = 200+rand(0,55); g2 = 80+rand(0,120); b = 170+rand(0,85); }
+        pts.push({ x: offX + (px+jx)*dispScale, y: offY + (py+jy)*dispScale, r, g: g2, b });
     }
+
+    tmp.width = 0; tmp.height = 0; // free memory
     return pts;
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  TEXT MOSAIC GENERATION (high-res offscreen canvas)
+//  TEXT MOSAIC — memory-capped, aspect-ratio preserving
 // ═══════════════════════════════════════════════════════════════
 function buildMosaic(imgSource) {
-    const mW = Math.floor(W * DPR * CFG.MOSAIC_SCALE);
-    const mH = Math.floor(H * DPR * CFG.MOSAIC_SCALE);
+    // Mosaic canvas uses IMAGE's aspect ratio — preserves original proportions
+    const imgAR = imgSource.width / imgSource.height;
+    const maxDim = Math.max(W, H) * 3;
+    let mW, mH;
+    if (imgAR >= 1) { mW = maxDim; mH = (maxDim / imgAR) | 0; }
+    else             { mH = maxDim; mW = (mH * imgAR) | 0; }
+
+    // Cap total pixel budget
+    const totalPx = mW * mH;
+    if (totalPx > CFG.MAX_MOSAIC_PIXELS) {
+        const sc = Math.sqrt(CFG.MAX_MOSAIC_PIXELS / totalPx);
+        mW = (mW * sc) | 0;
+        mH = (mH * sc) | 0;
+    }
+
     mosaicCanvas = document.createElement('canvas');
     mosaicCanvas.width = mW;
     mosaicCanvas.height = mH;
     const mCtx = mosaicCanvas.getContext('2d');
 
-    // Fill dark background
     mCtx.fillStyle = '#0a0a1a';
     mCtx.fillRect(0, 0, mW, mH);
 
-    // Scale font for DPR
-    const fontSize = CFG.FONT_SIZE * DPR;
-    const charW = CFG.CHAR_W * DPR;
-    const lineH = CFG.LINE_H * DPR;
+    const fontSize = Math.max(7, Math.round(10 * Math.max(mW, mH) / maxDim));
+    const charW = fontSize * 0.6;
+    const lineH = fontSize * 1.18;
+    const cols = (mW / charW) | 0;
+    const rows = (mH / lineH) | 0;
 
-    // Sample image at mosaic resolution for color data
-    const cols = Math.floor(mW / charW);
-    const rows = Math.floor(mH / lineH);
+    // Image colors fill the ENTIRE grid — mosaic AR matches image AR
     const colorCanvas = document.createElement('canvas');
     colorCanvas.width = cols;
     colorCanvas.height = rows;
@@ -544,52 +541,93 @@ function buildMosaic(imgSource) {
     cCtx.drawImage(imgSource, 0, 0, cols, rows);
     const cData = cCtx.getImageData(0, 0, cols, rows).data;
 
-    // Render text
-    mCtx.font = `${fontSize}px "Courier New", monospace`;
+    // Render text mosaic
+    mCtx.font = `${fontSize}px "Courier New",monospace`;
     mCtx.textBaseline = 'top';
 
-    // Include recipient name in words
-    let allWords = [...WORDS];
+    const allWords = [...WORDS];
     if (recipientName.trim()) {
-        allWords.push(recipientName.trim() + ' ');
-        allWords.push(recipientName.trim() + ' ');
+        allWords.push(recipientName.trim() + ' ', recipientName.trim() + ' ');
     }
+    const wordCount = allWords.length;
 
     let wIdx = 0;
     for (let row = 0; row < rows; row++) {
         let col = 0;
         while (col < cols) {
-            const word = allWords[wIdx % allWords.length];
+            const word = allWords[wIdx % wordCount];
             wIdx++;
-            for (let i = 0; i < word.length && col + i < cols; i++) {
-                const pi = ((row) * cols + (col + i)) * 4;
-                const r = cData[pi], g = cData[pi+1], b = cData[pi+2];
-                mCtx.fillStyle = `rgb(${r},${g},${b})`;
-                mCtx.fillText(word[i], (col + i) * charW, row * lineH);
+            const wLen = word.length;
+            for (let ci = 0; ci < wLen && col + ci < cols; ci++) {
+                const gc = col + ci;
+                const pi = (row * cols + gc) << 2;
+                mCtx.fillStyle = `rgb(${cData[pi]},${cData[pi+1]},${cData[pi+2]})`;
+                mCtx.fillText(word[ci], gc * charW, row * lineH);
             }
-            col += word.length;
+            col += wLen;
         }
     }
 
-    // Set zoom center and initial level
-    zoomCx = mW / 2;
-    zoomCy = mH * 0.45;
-    CFG.ZOOM_START = 1 / (CFG.MOSAIC_SCALE * DPR);
-    zoomLevel = CFG.ZOOM_START;
+    // Free color canvas memory
+    colorCanvas.width = 0; colorCanvas.height = 0;
+
+    // Adaptive max zoom: how far can we zoom before characters pixelate
+    const containScale = Math.min(W / mW, H / mH);
+    const charScreenSize = charW * containScale;
+    mosaicMaxZoom = clamp(5.0 / charScreenSize, 2.0, 5.0);
+
+    zoomLevel = 1.0;
 }
 
 function drawMosaic() {
-    const viewW = (W * DPR) / zoomLevel;
-    const viewH = (H * DPR) / zoomLevel;
-    const sx = clamp(zoomCx - viewW/2, 0, mosaicCanvas.width - viewW);
-    const sy = clamp(zoomCy - viewH/2, 0, mosaicCanvas.height - viewH);
-    ctx.drawImage(mosaicCanvas, sx, sy, viewW, viewH, 0, 0, W, H);
+    if (!mosaicCanvas) return;
+    const mW = mosaicCanvas.width;
+    const mH = mosaicCanvas.height;
+    const mAR = mW / mH;
+    const screenAR = W / H;
+
+    // "Contain" fit — preserves image's original aspect ratio on screen
+    let fitW, fitH;
+    if (mAR > screenAR) { fitW = W; fitH = W / mAR; }
+    else                 { fitH = H; fitW = H * mAR; }
+
+    // Zoom scales up from center (camera moves closer)
+    const dw = fitW * zoomLevel;
+    const dh = fitH * zoomLevel;
+    const dx = (W - dw) / 2;
+    const dy = (H - dh) / 2;
+
+    ctx.drawImage(mosaicCanvas, 0, 0, mW, mH, dx, dy, dw, dh);
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  PARTICLE DRAWING SHAPES
+//  PARTICLE RENDERING — split by shape for optimal batching
+//  Shape 0 = anti-aliased circle (arc), 1/2/3 = path-based
 // ═══════════════════════════════════════════════════════════════
-function drawHeart(cx, cy, s) {
+function drawParticlesDots() {
+    for (let i = 0; i < particleCount; i++) {
+        const p = particles[i];
+        if (p.shape !== 0) continue;
+        const r = p.size < 1.2 ? 1.2 : p.size;
+        ctx.fillStyle = `rgba(${p.r|0},${p.g|0},${p.b|0},${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, 6.2832);
+        ctx.fill();
+    }
+}
+
+function drawParticlesShaped() {
+    for (let i = 0; i < particleCount; i++) {
+        const p = particles[i];
+        if (p.shape === 0) continue;
+        ctx.fillStyle = `rgba(${p.r|0},${p.g|0},${p.b|0},${p.alpha})`;
+        if (p.shape === 1) drawHeartShape(p.x, p.y, p.size);
+        else if (p.shape === 2) drawStarShape(p.x, p.y, p.size);
+        else drawFlowerShape(p.x, p.y, p.size);
+    }
+}
+
+function drawHeartShape(cx, cy, s) {
     const hs = s * 0.55;
     ctx.beginPath();
     ctx.moveTo(cx, cy + hs * 0.35);
@@ -597,21 +635,23 @@ function drawHeart(cx, cy, s) {
     ctx.bezierCurveTo(cx - hs*0.55, cy - hs, cx - hs, cy - hs*0.4, cx, cy + hs*0.35);
     ctx.fill();
 }
-function drawStar(cx, cy, s) {
-    const oR = s*0.5, iR = s*0.2;
+
+function drawStarShape(cx, cy, s) {
+    const oR = s * 0.5, iR = s * 0.2;
     ctx.beginPath();
     for (let i = 0; i < 10; i++) {
-        const r = i%2===0 ? oR : iR;
-        const a = (i*Math.PI/5) - Math.PI/2;
-        if (i===0) ctx.moveTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
-        else ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+        const r = i % 2 === 0 ? oR : iR;
+        const a = i * Math.PI / 5 - Math.PI / 2;
+        i === 0 ? ctx.moveTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r)
+                 : ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
     }
     ctx.closePath(); ctx.fill();
 }
-function drawFlower(cx, cy, s) {
+
+function drawFlowerShape(cx, cy, s) {
     const pR = s * 0.35;
     for (let i = 0; i < 5; i++) {
-        const a = (i/5)*Math.PI*2 - Math.PI/2;
+        const a = (i/5) * Math.PI * 2 - Math.PI / 2;
         ctx.beginPath();
         ctx.ellipse(cx+Math.cos(a)*pR*0.55, cy+Math.sin(a)*pR*0.55, pR*0.5, pR*0.3, a, 0, Math.PI*2);
         ctx.fill();
@@ -619,24 +659,13 @@ function drawFlower(cx, cy, s) {
     ctx.beginPath(); ctx.arc(cx, cy, pR*0.22, 0, Math.PI*2); ctx.fill();
 }
 
-function drawParticle(p) {
-    ctx.fillStyle = `rgba(${Math.round(p.r)},${Math.round(p.g)},${Math.round(p.b)},${p.alpha.toFixed(2)})`;
-    if (p.size <= 3 || p.shape === 0) {
-        const sz = Math.max(1.2, p.size);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, sz * 0.55, 0, Math.PI * 2);
-        ctx.fill();
-    } else if (p.shape === 1) {
-        drawHeart(p.x, p.y, p.size);
-    } else if (p.shape === 2) {
-        drawStar(p.x, p.y, p.size);
-    } else {
-        drawFlower(p.x, p.y, p.size);
-    }
+function drawAllParticles() {
+    drawParticlesDots();
+    drawParticlesShaped();
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  CONFETTI & PETALS
+//  CONFETTI — O(1) swap-and-pop removal instead of O(n) splice
 // ═══════════════════════════════════════════════════════════════
 function spawnConfetti(cx, cy, count) {
     for (let i = 0; i < count; i++) {
@@ -644,20 +673,22 @@ function spawnConfetti(cx, cy, count) {
         const speed = rand(4, 14);
         confetti.push({
             x: cx, y: cy,
-            vx: Math.cos(angle)*speed,
-            vy: Math.sin(angle)*speed - rand(2,6),
-            r: rand(0,255), g: rand(0,255), b: rand(0,255),
-            size: rand(3, 7),
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - rand(2, 6),
+            r: rand(0,255)|0, g: rand(0,255)|0, b: rand(0,255)|0,
+            size: rand(3, 6),
             life: 1,
-            decay: rand(0.008, 0.02),
+            decay: rand(0.01, 0.022),
             rotation: rand(0, Math.PI*2),
             rotSpeed: rand(-0.2, 0.2),
         });
     }
+    confettiCount = confetti.length;
 }
 
 function updateConfetti() {
-    for (let i = confetti.length - 1; i >= 0; i--) {
+    let i = 0;
+    while (i < confettiCount) {
         const c = confetti[i];
         c.vy += 0.15;
         c.vx *= 0.99;
@@ -665,81 +696,94 @@ function updateConfetti() {
         c.y += c.vy;
         c.life -= c.decay;
         c.rotation += c.rotSpeed;
-        if (c.life <= 0) confetti.splice(i, 1);
+        if (c.life <= 0) {
+            confettiCount--;
+            if (i < confettiCount) confetti[i] = confetti[confettiCount];
+            confetti.length = confettiCount;
+        } else {
+            i++;
+        }
     }
 }
 
 function drawConfetti() {
-    confetti.forEach(c => {
+    for (let i = 0; i < confettiCount; i++) {
+        const c = confetti[i];
         ctx.save();
         ctx.translate(c.x, c.y);
         ctx.rotate(c.rotation);
-        ctx.fillStyle = `rgba(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)},${c.life.toFixed(2)})`;
-        ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size * 0.6);
+        ctx.globalAlpha = c.life;
+        ctx.fillStyle = `rgb(${c.r},${c.g},${c.b})`;
+        ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size * 0.6);
         ctx.restore();
-    });
+    }
+    ctx.globalAlpha = 1;
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  PETALS — combined update+draw (single pass, 15 elements)
+// ═══════════════════════════════════════════════════════════════
 function initPetals() {
+    petals = [];
     for (let i = 0; i < 15; i++) {
         petals.push({
             x: rand(0, W), y: rand(-H, H),
             vx: rand(-0.3, 0.3), vy: rand(0.3, 1.2),
             size: rand(6, 14), rot: rand(0, Math.PI*2),
-            rotV: rand(-0.02, 0.02), alpha: rand(0.15, 0.35),
-            hue: rand(320, 360),
+            rotV: rand(-0.02, 0.02), alpha: rand(0.15, 0.3),
+            hue: rand(320, 360) | 0,
         });
     }
 }
 
-function updatePetals() {
-    petals.forEach(p => {
+function updateAndDrawPetals() {
+    for (let i = 0; i < petals.length; i++) {
+        const p = petals[i];
         p.x += p.vx + Math.sin(p.y * 0.005) * 0.3;
         p.y += p.vy;
         p.rot += p.rotV;
         if (p.y > H + 20) { p.y = -20; p.x = rand(0, W); }
         if (p.x > W + 20) p.x = -20;
         if (p.x < -20) p.x = W + 20;
-    });
-}
 
-function drawPetals() {
-    petals.forEach(p => {
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
         ctx.fillStyle = `hsla(${p.hue},70%,70%,${p.alpha})`;
         ctx.beginPath();
-        ctx.ellipse(0, 0, p.size, p.size*0.5, 0, 0, Math.PI*2);
+        ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-    });
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  SHOCKWAVE
-// ═══════════════════════════════════════════════════════════════
-function spawnShockwave(x, y) {
-    shockwaves.push({ x, y, radius: 0, maxRadius: Math.max(W,H)*0.8, life: 1 });
-}
-
-function updateShockwaves() {
-    for (let i = shockwaves.length-1; i >= 0; i--) {
-        const s = shockwaves[i];
-        s.radius += (s.maxRadius - s.radius) * 0.06;
-        s.life -= 0.015;
-        if (s.life <= 0) shockwaves.splice(i, 1);
     }
 }
 
-function drawShockwaves() {
-    shockwaves.forEach(s => {
-        ctx.strokeStyle = `rgba(255,105,180,${(s.life*0.4).toFixed(2)})`;
+// ═══════════════════════════════════════════════════════════════
+//  SHOCKWAVES — O(1) removal, combined update+draw
+// ═══════════════════════════════════════════════════════════════
+function spawnShockwave(x, y) {
+    shockwaves.push({ x, y, radius: 0, maxRadius: Math.max(W, H) * 0.8, life: 1 });
+    shockwaveCount = shockwaves.length;
+}
+
+function updateAndDrawShockwaves() {
+    let i = 0;
+    while (i < shockwaveCount) {
+        const s = shockwaves[i];
+        s.radius += (s.maxRadius - s.radius) * 0.06;
+        s.life -= 0.015;
+        if (s.life <= 0) {
+            shockwaveCount--;
+            if (i < shockwaveCount) shockwaves[i] = shockwaves[shockwaveCount];
+            shockwaves.length = shockwaveCount;
+            continue;
+        }
+        ctx.strokeStyle = `rgba(255,105,180,${(s.life * 0.4).toFixed(2)})`;
         ctx.lineWidth = Math.max(1, 4 * s.life);
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.radius, 0, Math.PI*2);
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
         ctx.stroke();
-    });
+        i++;
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -760,102 +804,125 @@ const PHASE_DURATIONS = {
     INTERACTIVE: Infinity,
 };
 
+// Pre-built static map (no object allocation per frame)
+const PHASE_TRANSITIONS = {
+    MOSAIC_IN: 'MOSAIC_HOLD',
+    MOSAIC_HOLD: 'ZOOM',
+    ZOOM: 'ZOOM_HOLD',
+    ZOOM_HOLD: 'FLASH',
+    FLASH: 'EXPLOSION',
+    EXPLOSION: 'FLY',
+    FLY: 'HEART',
+    HEART: 'STAR',
+    STAR: 'FLOWER',
+    FLOWER: 'REFORM',
+    REFORM: 'INTERACTIVE',
+};
+
 function setPhase(name) {
     phase = name;
     phaseStartTime = performance.now();
     phaseTime = 0;
 
-    // Phase-specific initialization
-    if (name === 'MOSAIC_IN') {
-        document.getElementById('scanlines').style.opacity = '0.6';
-    }
-    if (name === 'ZOOM') {
-        showPhaseMsg('Nhìn kỹ hơn nhé... 🔍');
-    }
-    if (name === 'ZOOM_HOLD') {
-        showPhaseMsg('Mỗi từ là một lời chúc dành cho bạn ✨');
-    }
-    if (name === 'FLASH') {
-        document.getElementById('flash').style.transition = 'opacity 0.05s';
-        document.getElementById('flash').style.opacity = '1';
-        document.getElementById('scanlines').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('flash').style.transition = 'opacity 0.35s';
-            document.getElementById('flash').style.opacity = '0';
-        }, 80);
-
-        // Initialize particles at image 1 positions
-        initParticlesFromImage1();
-        spawnShockwave(W/2, H/2);
-        spawnConfetti(W/2, H/2, 80);
-    }
-    if (name === 'EXPLOSION') {
-        showPhaseMsg('');
-        // Give particles explosion velocity
-        particles.forEach(p => {
-            const dx = p.x - W/2;
-            const dy = p.y - H/2;
-            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-            p.vx = (dx / dist) * rand(8, 22) + rand(-4, 4);
-            p.vy = (dy / dist) * rand(8, 22) + rand(-6, 2);
-            p.shape = Math.floor(rand(0, 4));
-            p.size = rand(3, 8);
-        });
-    }
-    if (name === 'HEART') {
-        showPhaseMsg('💕');
-        setParticleTargets(heartPts);
-    }
-    if (name === 'STAR') {
-        showPhaseMsg('⭐');
-        setParticleTargets(starPts);
-    }
-    if (name === 'FLOWER') {
-        showPhaseMsg('🌸');
-        setParticleTargets(flowerPts);
-    }
-    if (name === 'REFORM') {
-        showPhaseMsg('');
-        setParticleTargets(img2Points);
-        particles.forEach(p => { p.shape = 0; p.tsize = rand(2.5, 4.5); });
-    }
-    if (name === 'INTERACTIVE') {
-        showPhaseMsg('Di chuột / chạm để tương tác 💝');
-        setTimeout(() => showPhaseMsg(''), 3000);
-        setTimeout(() => {
-            const panel = document.getElementById('finalPanel');
-            panel.classList.add('show');
-            typewriterMessage();
-        }, 2000);
+    switch (name) {
+        case 'MOSAIC_IN':
+            document.getElementById('scanlines').style.opacity = '0.6';
+            break;
+        case 'ZOOM':
+            showPhaseMsg('Nhìn kỹ hơn nhé... 🔍');
+            break;
+        case 'ZOOM_HOLD':
+            showPhaseMsg('Mỗi từ là một lời chúc dành cho bạn ✨');
+            break;
+        case 'FLASH': {
+            const flash = document.getElementById('flash');
+            flash.style.transition = 'opacity 0.05s';
+            flash.style.opacity = '1';
+            document.getElementById('scanlines').style.opacity = '0';
+            setTimeout(() => {
+                flash.style.transition = 'opacity 0.35s';
+                flash.style.opacity = '0';
+            }, 80);
+            initParticlesFromImage1();
+            spawnShockwave(W / 2, H / 2);
+            spawnConfetti(W / 2, H / 2, 60);
+            // FREE mosaic memory — no longer needed after this phase
+            if (mosaicCanvas) {
+                mosaicCanvas.width = 0; mosaicCanvas.height = 0;
+                mosaicCanvas = null;
+            }
+            break;
+        }
+        case 'EXPLOSION':
+            showPhaseMsg('');
+            for (let i = 0; i < particleCount; i++) {
+                const p = particles[i];
+                const dx = p.x - W / 2;
+                const dy = p.y - H / 2;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                p.vx = (dx / dist) * rand(8, 20) + rand(-3, 3);
+                p.vy = (dy / dist) * rand(8, 20) + rand(-5, 2);
+                p.shape = (rand(0, 4)) | 0;
+                p.size = rand(4, 9);
+            }
+            break;
+        case 'HEART':
+            showPhaseMsg('💕');
+            setParticleTargets(heartPts);
+            break;
+        case 'STAR':
+            showPhaseMsg('⭐');
+            setParticleTargets(starPts);
+            break;
+        case 'FLOWER':
+            showPhaseMsg('🌸');
+            setParticleTargets(flowerPts);
+            break;
+        case 'REFORM':
+            showPhaseMsg('');
+            setParticleTargets(img2Points);
+            for (let i = 0; i < particleCount; i++) {
+                particles[i].shape = 0;
+                particles[i].tsize = rand(2.8, 4.5);
+            }
+            break;
+        case 'INTERACTIVE':
+            showPhaseMsg('Di chuột / chạm để tương tác 💝');
+            setTimeout(() => showPhaseMsg(''), 3000);
+            setTimeout(() => {
+                document.getElementById('finalPanel').classList.add('show');
+                typewriterMessage();
+            }, 2000);
+            // FREE target arrays no longer needed
+            heartPts = starPts = flowerPts = img1Points = null;
+            break;
     }
 }
 
 function setParticleTargets(pts) {
-    for (let i = 0; i < particles.length; i++) {
-        const t = pts[i];
-        particles[i].tx = t.x;
-        particles[i].ty = t.y;
-        particles[i].tr = t.r;
-        particles[i].tg = t.g;
-        particles[i].tb = t.b;
-        particles[i].tsize = rand(3.5, 7);
+    for (let i = 0; i < particleCount; i++) {
+        const t = pts[i], p = particles[i];
+        p.tx = t.x; p.ty = t.y;
+        p.tr = t.r; p.tg = t.g; p.tb = t.b;
+        p.tsize = rand(4, 8);
     }
 }
 
 function initParticlesFromImage1() {
-    particles = [];
-    for (let i = 0; i < img1Points.length; i++) {
+    particleCount = img1Points.length;
+    particles = new Array(particleCount);
+    for (let i = 0; i < particleCount; i++) {
         const p = img1Points[i];
-        particles.push({
+        particles[i] = {
             x: p.x, y: p.y,
             vx: 0, vy: 0,
             tx: p.x, ty: p.y,
             r: p.r, g: p.g, b: p.b,
             tr: p.r, tg: p.g, tb: p.b,
-            size: 3, tsize: 3,
+            size: 3.0, tsize: 3.0,
             shape: 0,
             alpha: 1,
-        });
+        };
     }
 }
 
@@ -875,88 +942,82 @@ function typewriterMessage() {
     const name = recipientName.trim() || 'Bạn';
     const lines = [
         { el: 'finalLine1', text: `Gửi đến ${name},`, cls: 'name-highlight' },
-        { el: 'finalLine2', text: `Bạn thật xinh đẹp, giỏi giang và tuyệt vời!` },
-        { el: 'finalLine3', text: `Chúc bạn ngày 8/3 thật nhiều niềm vui và hạnh phúc! 💐` },
+        { el: 'finalLine2', text: 'Bạn thật xinh đẹp, giỏi giang và tuyệt vời!' },
+        { el: 'finalLine3', text: 'Chúc bạn ngày 8/3 thật nhiều niềm vui và hạnh phúc! 💐' },
     ];
     let delay = 0;
-    lines.forEach((line, idx) => {
+    for (const line of lines) {
         const el = document.getElementById(line.el);
         el.textContent = '';
         if (line.cls) el.classList.add(line.cls);
-        const chars = line.text.split('');
-        chars.forEach((ch, ci) => {
-            setTimeout(() => { el.textContent += ch; }, delay + ci * 40);
-        });
+        const chars = line.text;
+        for (let ci = 0; ci < chars.length; ci++) {
+            const d = delay + ci * 40;
+            const ch = chars[ci];
+            setTimeout(() => { el.textContent += ch; }, d);
+        }
         delay += chars.length * 40 + 300;
-    });
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  UPDATE
+//  UPDATE — tight physics loops
 // ═══════════════════════════════════════════════════════════════
-function update(dt) {
+function update() {
     phaseTime = (performance.now() - phaseStartTime) / 1000;
 
-    // Phase transitions
+    // Phase transition
     const dur = PHASE_DURATIONS[phase];
-    if (dur && phaseTime >= dur && dur !== Infinity) {
-        const transitions = {
-            MOSAIC_IN: 'MOSAIC_HOLD',
-            MOSAIC_HOLD: 'ZOOM',
-            ZOOM: 'ZOOM_HOLD',
-            ZOOM_HOLD: 'FLASH',
-            FLASH: 'EXPLOSION',
-            EXPLOSION: 'FLY',
-            FLY: 'HEART',
-            HEART: 'STAR',
-            STAR: 'FLOWER',
-            FLOWER: 'REFORM',
-            REFORM: 'INTERACTIVE',
-        };
-        if (transitions[phase]) setPhase(transitions[phase]);
+    if (dur !== undefined && dur !== Infinity && phaseTime >= dur) {
+        const next = PHASE_TRANSITIONS[phase];
+        if (next) { setPhase(next); return; }
     }
 
     // Zoom animation
     if (phase === 'ZOOM') {
         const t = easeInOutCubic(clamp(phaseTime / PHASE_DURATIONS.ZOOM, 0, 1));
-        zoomLevel = lerp(CFG.ZOOM_START, CFG.ZOOM_END, t);
+        zoomLevel = lerp(1.0, mosaicMaxZoom, t);
     }
 
-    // Particle physics
+    // Particle physics — hot loop, all constants hoisted out
     if (phase === 'EXPLOSION' || phase === 'FLY') {
-        particles.forEach(p => {
-            p.vy += 0.08; // gravity
+        for (let i = 0; i < particleCount; i++) {
+            const p = particles[i];
+            p.vy += 0.08;
             p.vx *= 0.993;
             p.vy *= 0.993;
             p.x += p.vx;
             p.y += p.vy;
-            // Color lerp toward shape colors
             p.r += (p.tr - p.r) * 0.02;
             p.g += (p.tg - p.g) * 0.02;
             p.b += (p.tb - p.b) * 0.02;
-        });
-    } else if (phase === 'HEART' || phase === 'STAR' || phase === 'FLOWER' ||
-               phase === 'REFORM' || phase === 'INTERACTIVE') {
-        const isInteractive = (phase === 'INTERACTIVE');
+        }
+    } else if (SPRING_PHASES.has(phase)) {
+        const isInteractive = phase === 'INTERACTIVE';
         const spring = isInteractive ? CFG.SPRING * 1.2 : CFG.SPRING;
         const damp = isInteractive ? CFG.DAMPING : 0.86;
+        const colorLerp = CFG.COLOR_LERP;
+        const doMouse = mouseActive || isInteractive;
+        const mRSq = CFG.MOUSE_RADIUS_SQ;
+        const mR = CFG.MOUSE_RADIUS;
+        const mF = CFG.MOUSE_FORCE;
+        const mx = mouseX, my = mouseY;
 
-        particles.forEach(p => {
-            // Spring to target
+        for (let i = 0; i < particleCount; i++) {
+            const p = particles[i];
             p.vx += (p.tx - p.x) * spring;
             p.vy += (p.ty - p.y) * spring;
 
-            // Mouse repulsion (interactive mode or always for fun)
-            if (mouseActive || isInteractive) {
-                const dx = p.x - mouseX;
-                const dy = p.y - mouseY;
-                const distSq = dx*dx + dy*dy;
-                const R = CFG.MOUSE_RADIUS;
-                if (distSq < R*R && distSq > 0.1) {
-                    const dist = Math.sqrt(distSq);
-                    const force = (R - dist) / R * CFG.MOUSE_FORCE;
-                    p.vx += (dx / dist) * force;
-                    p.vy += (dy / dist) * force;
+            // Mouse repulsion — squared-distance early exit avoids sqrt for ~95% of particles
+            if (doMouse) {
+                const dx = p.x - mx;
+                const dy = p.y - my;
+                const dSq = dx * dx + dy * dy;
+                if (dSq < mRSq && dSq > 1) {
+                    const dist = Math.sqrt(dSq);
+                    const invF = (mR - dist) / mR * mF / dist;
+                    p.vx += dx * invF;
+                    p.vy += dy * invF;
                 }
             }
 
@@ -965,103 +1026,108 @@ function update(dt) {
             p.x += p.vx;
             p.y += p.vy;
 
-            // Color & size lerp
-            p.r += (p.tr - p.r) * CFG.COLOR_LERP;
-            p.g += (p.tg - p.g) * CFG.COLOR_LERP;
-            p.b += (p.tb - p.b) * CFG.COLOR_LERP;
+            p.r += (p.tr - p.r) * colorLerp;
+            p.g += (p.tg - p.g) * colorLerp;
+            p.b += (p.tb - p.b) * colorLerp;
             p.size += (p.tsize - p.size) * 0.05;
-        });
+        }
     }
 
     updateConfetti();
-    updatePetals();
-    updateShockwaves();
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════════════════════
 function render() {
-    // Trail effect for particle phases, clear for mosaic phases
-    const particlePhases = ['EXPLOSION','FLY','HEART','STAR','FLOWER','REFORM','INTERACTIVE'];
-    if (particlePhases.includes(phase)) {
-        ctx.fillStyle = 'rgba(10, 10, 26, 0.18)';
+    const isParticle = PARTICLE_PHASES.has(phase);
+
+    // Background: motion trail for particles, solid clear for mosaic
+    if (isParticle) {
+        ctx.fillStyle = 'rgba(10,10,26,0.18)';
         ctx.fillRect(0, 0, W, H);
     } else {
         ctx.fillStyle = '#0a0a1a';
         ctx.fillRect(0, 0, W, H);
     }
 
-    // Draw background petals
-    drawPetals();
+    updateAndDrawPetals();
 
-    // Mosaic phases
-    if (phase === 'MOSAIC_IN') {
-        ctx.globalAlpha = clamp(phaseTime / 1.5, 0, 1);
-        drawMosaic();
-        ctx.globalAlpha = 1;
-    } else if (phase === 'MOSAIC_HOLD' || phase === 'ZOOM' || phase === 'ZOOM_HOLD') {
-        drawMosaic();
-        // Subtle glow overlay during zoom
-        if (phase === 'ZOOM' || phase === 'ZOOM_HOLD') {
-            const t = (phase === 'ZOOM') ? phaseTime / PHASE_DURATIONS.ZOOM : 1;
-            ctx.fillStyle = `rgba(255,105,180,${(0.03 * t).toFixed(3)})`;
-            ctx.fillRect(0, 0, W, H);
-        }
-    } else if (phase === 'FLASH') {
-        // Brief flash, particles start appearing
-        const t = phaseTime / PHASE_DURATIONS.FLASH;
-        if (t > 0.3) {
-            ctx.globalAlpha = (t - 0.3) / 0.7;
-            particles.forEach(drawParticle);
+    // Phase-specific rendering
+    switch (phase) {
+        case 'MOSAIC_IN':
+            ctx.globalAlpha = clamp(phaseTime / 1.5, 0, 1);
+            drawMosaic();
             ctx.globalAlpha = 1;
-        }
-    } else if (particlePhases.includes(phase)) {
-        // Draw particles
-        particles.forEach(drawParticle);
-
-        // Glow effect for formations
-        if (phase === 'HEART' || phase === 'STAR' || phase === 'FLOWER') {
-            ctx.shadowBlur = 6;
-            ctx.shadowColor = 'rgba(255,105,180,0.3)';
-            // Draw a few "highlight" particles with glow
-            for (let i = 0; i < particles.length; i += 12) {
-                const p = particles[i];
-                ctx.fillStyle = `rgba(255,255,255,0.15)`;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size * 0.8, 0, Math.PI*2);
-                ctx.fill();
+            break;
+        case 'MOSAIC_HOLD':
+        case 'ZOOM':
+        case 'ZOOM_HOLD':
+            drawMosaic();
+            if (phase === 'ZOOM' || phase === 'ZOOM_HOLD') {
+                const t = phase === 'ZOOM' ? phaseTime / PHASE_DURATIONS.ZOOM : 1;
+                ctx.fillStyle = `rgba(255,105,180,${(0.03 * t).toFixed(3)})`;
+                ctx.fillRect(0, 0, W, H);
             }
-            ctx.shadowBlur = 0;
+            break;
+        case 'FLASH': {
+            const t = phaseTime / PHASE_DURATIONS.FLASH;
+            if (t > 0.3) {
+                ctx.globalAlpha = (t - 0.3) / 0.7;
+                drawAllParticles();
+                ctx.globalAlpha = 1;
+            }
+            break;
         }
+        default:
+            if (isParticle) {
+                drawAllParticles();
+                // Lightweight glow for shape formations
+                if (phase === 'HEART' || phase === 'STAR' || phase === 'FLOWER') {
+                    ctx.globalAlpha = 0.07;
+                    ctx.fillStyle = '#ff69b4';
+                    for (let i = 0; i < particleCount; i += 12) {
+                        const p = particles[i];
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * 1.5, 0, 6.2832);
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = 1;
+                }
+                // Additive bloom for image formation — richer particle art
+                if (phase === 'REFORM' || phase === 'INTERACTIVE') {
+                    ctx.globalCompositeOperation = 'lighter';
+                    ctx.globalAlpha = 0.1;
+                    for (let i = 0; i < particleCount; i += 4) {
+                        const p = particles[i];
+                        if (p.shape !== 0) continue;
+                        ctx.fillStyle = `rgb(${p.r|0},${p.g|0},${p.b|0})`;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * 1.8, 0, 6.2832);
+                        ctx.fill();
+                    }
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.globalAlpha = 1;
+                }
+            }
+            break;
     }
 
-    // Shockwaves
-    drawShockwaves();
-    // Confetti
-    drawConfetti();
+    updateAndDrawShockwaves();
+    if (confettiCount > 0) drawConfetti();
 
-    // Vignette (always, subtle)
-    const vignette = ctx.createRadialGradient(W/2, H/2, W*0.3, W/2, H/2, W*0.75);
-    vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, 'rgba(0,0,0,0.5)');
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, W, H);
+    // Cached vignette (drawn from pre-rendered canvas — zero gradient calc per frame)
+    if (vignetteCanvas) ctx.drawImage(vignetteCanvas, 0, 0);
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  MAIN LOOP
 // ═══════════════════════════════════════════════════════════════
-let lastTime = 0;
-function loop(now) {
-    const dt = Math.min((now - lastTime) / 1000, 0.05);
-    lastTime = now;
-
+function loop() {
     if (phase !== 'IDLE') {
-        update(dt);
+        update();
         render();
     }
-
     requestAnimationFrame(loop);
 }
 
@@ -1069,121 +1135,116 @@ function loop(now) {
 //  EVENT HANDLERS
 // ═══════════════════════════════════════════════════════════════
 function setupEvents() {
-    canvas.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        mouseActive = true;
+    canvas.addEventListener('mousemove', e => {
+        mouseX = e.clientX; mouseY = e.clientY; mouseActive = true;
     });
-    canvas.addEventListener('mouseleave', () => { mouseActive = false; mouseX = -9999; mouseY = -9999; });
+    canvas.addEventListener('mouseleave', () => {
+        mouseActive = false; mouseX = mouseY = -9999;
+    });
 
-    canvas.addEventListener('click', (e) => {
-        if (phase === 'INTERACTIVE') {
-            spawnShockwave(e.clientX, e.clientY);
-            spawnConfetti(e.clientX, e.clientY, 40);
-            // Burst particles outward from click
-            particles.forEach(p => {
-                const dx = p.x - e.clientX;
-                const dy = p.y - e.clientY;
-                const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-                if (dist < 180) {
-                    const force = (180 - dist) / 180 * 18;
-                    p.vx += (dx / dist) * force;
-                    p.vy += (dy / dist) * force;
-                }
-            });
+    canvas.addEventListener('click', e => {
+        if (phase !== 'INTERACTIVE') return;
+        const ex = e.clientX, ey = e.clientY;
+        spawnShockwave(ex, ey);
+        spawnConfetti(ex, ey, 30);
+        const burstRSq = 180 * 180;
+        for (let i = 0; i < particleCount; i++) {
+            const p = particles[i];
+            const dx = p.x - ex, dy = p.y - ey;
+            const dSq = dx * dx + dy * dy;
+            if (dSq < burstRSq && dSq > 1) {
+                const dist = Math.sqrt(dSq);
+                const force = (180 - dist) / 180 * 16;
+                p.vx += (dx / dist) * force;
+                p.vy += (dy / dist) * force;
+            }
         }
     });
 
-    // Touch support
-    canvas.addEventListener('touchmove', (e) => {
+    canvas.addEventListener('touchmove', e => {
         e.preventDefault();
         const t = e.touches[0];
-        mouseX = t.clientX;
-        mouseY = t.clientY;
-        mouseActive = true;
+        mouseX = t.clientX; mouseY = t.clientY; mouseActive = true;
     }, { passive: false });
-    canvas.addEventListener('touchend', () => { mouseActive = false; mouseX = -9999; mouseY = -9999; });
-    canvas.addEventListener('touchstart', (e) => {
+    canvas.addEventListener('touchend', () => {
+        mouseActive = false; mouseX = mouseY = -9999;
+    });
+    canvas.addEventListener('touchstart', e => {
         if (phase === 'INTERACTIVE') {
             const t = e.touches[0];
             spawnShockwave(t.clientX, t.clientY);
-            spawnConfetti(t.clientX, t.clientY, 30);
+            spawnConfetti(t.clientX, t.clientY, 20);
         }
     });
 
-    // Skip to interactive on spacebar (for impatient people)
-    window.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', e => {
         if (e.code === 'Space' && phase !== 'IDLE' && phase !== 'INTERACTIVE') {
             e.preventDefault();
-            // Fast-forward
             if (!particles.length) initParticlesFromImage1();
+            if (mosaicCanvas) { mosaicCanvas.width = 0; mosaicCanvas.height = 0; mosaicCanvas = null; }
             setPhase('REFORM');
         }
     });
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  INTRO UI HANDLERS
+//  INTRO UI
 // ═══════════════════════════════════════════════════════════════
 function setupIntroUI() {
-    // File upload handlers
     const file1 = document.getElementById('file1');
     const file2 = document.getElementById('file2');
-    const preview1 = document.getElementById('preview1');
-    const preview2 = document.getElementById('preview2');
+    const prev1 = document.getElementById('preview1');
+    const prev2 = document.getElementById('preview2');
 
-    file1.addEventListener('change', async (e) => {
+    file1.addEventListener('change', async e => {
         if (e.target.files[0]) {
             image1 = await fileToImage(e.target.files[0]);
-            preview1.src = image1.src;
-            preview1.style.display = 'block';
+            prev1.src = image1.src; prev1.style.display = 'block';
         }
     });
-    file2.addEventListener('change', async (e) => {
+    file2.addEventListener('change', async e => {
         if (e.target.files[0]) {
             image2 = await fileToImage(e.target.files[0]);
-            preview2.src = image2.src;
-            preview2.style.display = 'block';
+            prev2.src = image2.src; prev2.style.display = 'block';
         }
     });
 
-    // Start button
     document.getElementById('startBtn').addEventListener('click', () => startExperience(false));
     document.getElementById('demoBtn').addEventListener('click', () => startExperience(true));
 }
 
 async function startExperience(useDemo) {
     recipientName = document.getElementById('nameInput').value;
-
     if (useDemo || !image1) image1 = createDefaultImage1();
     if (useDemo || !image2) image2 = createDefaultImage2();
 
-    // Hide overlay
     document.getElementById('overlay').classList.add('hidden');
 
-    // Process everything
+    const N = CFG.PARTICLE_COUNT;
     buildMosaic(image1);
-    img1Points = sampleImage(image1, CFG.PARTICLE_COUNT, W, H);
-    img2Points = sampleImage(image2, CFG.PARTICLE_COUNT, W, H);
-    heartPts = generateShapePoints('heart', CFG.PARTICLE_COUNT, W, H);
-    starPts = generateShapePoints('star', CFG.PARTICLE_COUNT, W, H);
-    flowerPts = generateShapePoints('flower', CFG.PARTICLE_COUNT, W, H);
+    img1Points  = sampleImage(image1, N, W, H);
+    img2Points  = sampleImage(image2, N, W, H);
+    heartPts    = generateShapePoints('heart', N, W, H);
+    starPts     = generateShapePoints('star', N, W, H);
+    flowerPts   = generateShapePoints('flower', N, W, H);
 
-    // Start the show!
+    // Release source images — data is now in point arrays
+    image1 = image2 = null;
+
     setPhase('MOSAIC_IN');
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  FLOATING HEARTS (CSS background)
+//  CSS-ONLY FLOATING HEARTS (zero JS per-frame cost)
 // ═══════════════════════════════════════════════════════════════
 function createFloatingHearts() {
     const container = document.getElementById('bgHearts');
-    const emojis = ['💕', '🌸', '✨', '💗', '⭐', '🌺', '💖', '💝', '🌹', '🦋'];
-    for (let i = 0; i < 20; i++) {
+    const emojis = ['💕','🌸','✨','💗','⭐','🌺','💖','💝','🌹','🦋'];
+    for (let i = 0; i < 18; i++) {
         const span = document.createElement('span');
         span.textContent = emojis[i % emojis.length];
         span.style.left = rand(0, 100) + '%';
-        span.style.fontSize = rand(14, 28) + 'px';
+        span.style.fontSize = rand(14, 26) + 'px';
         span.style.animationDuration = rand(8, 18) + 's';
         span.style.animationDelay = rand(0, 10) + 's';
         container.appendChild(span);
@@ -1193,20 +1254,18 @@ function createFloatingHearts() {
 // ═══════════════════════════════════════════════════════════════
 //  INITIALIZATION
 // ═══════════════════════════════════════════════════════════════
-let DPR = 1;
-
 function resizeCanvas() {
     DPR = window.devicePixelRatio || 1;
     W = window.innerWidth;
     H = window.innerHeight;
-    canvas.width = W * DPR;
-    canvas.height = H * DPR;
+    canvas.width = (W * DPR) | 0;
+    canvas.height = (H * DPR) | 0;
     canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    // Improve text rendering
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
+    buildVignetteCache();
 }
 
 function init() {
@@ -1216,7 +1275,6 @@ function init() {
 
     window.addEventListener('resize', () => {
         resizeCanvas();
-        // Re-generate petals for new size
         petals = [];
         initPetals();
     });
@@ -1225,8 +1283,6 @@ function init() {
     initPetals();
     setupEvents();
     setupIntroUI();
-
-    // Start render loop
     requestAnimationFrame(loop);
 }
 
